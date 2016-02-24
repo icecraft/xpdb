@@ -1,15 +1,17 @@
-基于标准库 bdb.py 和 pdb.py 构建
+## 基于标准库 bdb.py 和 pdb.py 构建
 
-一： 增加添加源代码目录功能
+###  1. 增加添加源代码目录功能
+```
       source dir A ------- __init__.py
                  '
 		 '--------  sr1.py
 		 '
 		 '--------  dir B ---- sr2.py
       可以直接用 break "src2.py":11|funcname [condition] 来设置断点
+```
 
-
-二： 增加 watch variable 功能：
+### 2. 增加 watch variable 功能：
+```
      1	class A(object):
      2	    def __init__(self, value=0):
      3	        self.value = value
@@ -75,32 +77,32 @@
     32	6
     33	7
     34	8
+```
 
 
-
-三：增加步进功能：
+### 3.增加步进功能：
+```
     next nums  
-    step nums  (不能精确控制， 因为 cPython 内部调试框架会处理 call 和 return 等事件.\
-导致当有 函数调用等事件发生时会进入 pdb 交互式环境）
+    step nums  (不能精确控制， 因为 cPython 内部调试框架会处理 call 和 return 等事件.导致当有 函数调用等事件发生时会进入 pdb 交互式环境）
 
     step/next nums (如果 nums 是负数则当 nums = 1 处理)
-
-四：增加 finish 命令
-    1：功能等同与 gdb finish 命令  
-    2：如果 while 或者 for 循环运行模块命名空间则不会有任何效果(运行在函数命名空间里才有效)，如
-        xxx.py
-	   '
-	   '
-	   '---  import sys
+```
+### 4.增加 finish 命令
+*    1：功能等同御 gdb finish 命令  
+*    2：如果 while 或者 for 循环运行模块命名空间则不会有任何效果(运行在函数命名空间里才有效)，如
+       假设 xxx.py 的代码如下
+```
+	    import sys
 	         while i in range(9):
 		     print i
 
                                         ------ 在这个 while 循环体内调用 finish 命令将没有任何作用
 
 		     print i*2
-		     
+```		     
 			    
-   3: 注意对以下代码（不完全）
+* 3: 注意对以下代码（不完全）
+```
 def uu():
    for j in range(3): 
     for i in range(2):
@@ -123,25 +125,27 @@ uu()
 0
 1
 The program finished and will be restarted
+```
 
-
-五：增加命令 'shell'
+### 5. 增加命令 'shell'
     invoke bash 进入交互式环境
     
 
-待增加功能：
-    1： 输出格式的美化
+### 待增加功能：
+  1： 输出格式的美化
+    
+```
         如 （Pdb） while f: print f; f = f.f_back  将被替换为
 	    while  f:
 	    ------ print f
 	    ------ f = f.f_back
 	    ------
-
-    2: 支持自定义命令：
+```
+*    2: 支持自定义命令：
         如 gdb 哪有的自定义命令和从配置文件中读取已有的命令定义
 
 
-    3: 支持设置变量值
+*    3: 支持设置变量值
 
 
 
