@@ -88,7 +88,7 @@
     step/next nums (如果 nums 是负数则当 nums = 1 处理)
 ```
 ### 4.增加 finish 命令
-*    1：功能等同御 gdb finish 命令  
+*    1：功能等同 gdb finish 命令  
 *    2：如果 while 或者 for 循环运行模块命名空间则不会有任何效果(运行在函数命名空间里才有效)，如
        假设 xxx.py 的代码如下
 ```
