@@ -28,7 +28,7 @@
     14	        self.my_a.set_value(value)
     15	
     16	a = A()
-    17	b = B(a)           ---- 假设在此处增加断点
+    17	b = B(a)           ---- 假设在此处增加断点 watch a.value
     18
     19	
     20	def uu():
