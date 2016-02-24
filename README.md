@@ -141,4 +141,8 @@ The program finished and will be restarted
         如 gdb 哪有的自定义命令和从配置文件中读取已有的命令定义
 
 
+    3: 支持设置变量值
+
+
+
 	
