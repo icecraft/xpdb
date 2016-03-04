@@ -201,7 +201,7 @@ class Bdb:
         
     def user_stopHere(self, frame, **kwarg):
         retV = False
-        if watchPointerList.findChangedPoint():
+        if watchPointerList.findChangedPoint(frame):
             retV = True
         elif self.info_for_finish :
             retV = True

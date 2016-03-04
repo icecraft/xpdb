@@ -55,13 +55,14 @@ class watchPointerList(object):
  
                   
       @classmethod
-      def findChangedPoint(cls):
+      def findChangedPoint(cls, frame):
           retV = False
           for di in cls._watchPList:
             try :
-                   f,  value, eexp = di[0], di[2], di[3]
-                   newValue = eval(eexp, f)
-                   if  newValue != value:
+                   f,  value, eexp, id_f = di[0], di[2], di[3], di[4]
+                    
+                   newValue = eval(eexp, f) if id_f != id(frame) else eval(eexp, frame.f_locals, frame.f_globals)
+                   if   newValue != value:
                           print ' WatchPoint %s: Old Value = %s, New Value = %s' %(eexp, value, newValue)
                           di[2] = newValue
                           retV = True
@@ -74,18 +75,19 @@ class watchPointerList(object):
           """ watch the name of point in nearest namespace,
 for example: if namespace A, B both have var a, the watch pointer may attach to A.a or B.a"""
           """can not find in that"""
-
+          print id(f.f_locals)
           try:
               _value = eval(arg, f.f_locals, f.f_globals)
               astT = _ast.parse(arg)
               _id = cls._getId(astT)
+              print _value, _id
               if _id == 'error':
                   raise NoThisVarError
               
               while f:
                       if f.f_locals.has_key(_id) or f.f_globals.has_key(_id):
                           wd = f.f_locals if f.f_locals.has_key(_id) else f.f_globals
-                          cls._watchPList.append([_copy(wd) , _id, _value, arg])
+                          cls._watchPList.append([_copy(wd) , _id, _value, arg, id(f)])
                           print >> sys.stdout, "Succ to Add Watch Point"
                           wd = None
                           return 
