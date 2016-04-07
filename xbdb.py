@@ -33,6 +33,7 @@ class Bdb:
         self.remainStepTimes = 0
         self.remainNextTimes = 0
         self.info_for_finish = None
+        self.traceClassName = []
         
     def canonic(self, filename):
         if filename == "<" + filename[1:-1] + ">":
@@ -88,7 +89,9 @@ class Bdb:
             # First call of dispatch since reset()
             self.botframe = frame.f_back # (CT) Note that this may also be None!
             return self.trace_dispatch
-        if not (self.stop_here(frame) or self.break_anywhere(frame)) :
+        if not (self.stop_here(frame) or \
+                self.break_anywhere(frame) or \
+                self.break_traceClassMethod(frame)) :
             # No need to trace this function
             if self.traceEveryLine:
                 return self.trace_dispatch
@@ -249,7 +252,38 @@ class Bdb:
         if utils.noWatchPoint():
             self.traceEveryLine = False
             
+    def set_traceClassMethod(self, arg):
+        if arg not in self.traceClassName:
+            self.traceClassName.append(arg)
+            
+    def unset_traceClassMethod(self, arg):
+        if int(arg) == -1:
+            self.traceClassName = []
+            print >> sys.stdout, "remove all trace Classes successfully!"
+        else:
+            self.infoTraceClassMethod()
+            print >>sys.stdout, "working ...."
+            self.traceClassName =  reduce(lambda r, (x,y): r+[y] if x != int(arg) else r,
+                                          enumerate(self.traceClassName),
+                                          [])
+            self.infoTraceClassMethod()            
+
+            
+    def infoTraceClassMethod(self):
+        for index, name in enumerate(self.traceClassName):
+            print index, " : ", name
+
+
+    def break_traceClassMethod(self, frame):
+        if 'self' not in frame.f_locals :
+            return False
         
+        for pattern in self.traceClassName:
+            pattern = pattern.strip('*')
+            if pattern in  str(frame.f_locals['self'].__class__):
+                return True
+        return False    
+    
     def _set_stopinfo(self, stopframe, returnframe, stoplineno=0):
         self.stopframe = stopframe
         self.returnframe = returnframe

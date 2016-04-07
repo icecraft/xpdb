@@ -75,7 +75,6 @@ class watchPointerList(object):
           """ watch the name of point in nearest namespace,
 for example: if namespace A, B both have var a, the watch pointer may attach to A.a or B.a"""
           """can not find in that"""
-          print id(f.f_locals)
           try:
               _value = eval(arg, f.f_locals, f.f_globals)
               astT = _ast.parse(arg)

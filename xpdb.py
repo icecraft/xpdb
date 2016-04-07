@@ -144,19 +144,22 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         """This method is called when there is the remote possibility
         that we ever need to stop in this function."""
         if self._wait_for_mainpyfile:
-            return
+            if self.wait_for_mainpyfile(frame):
+                return 
+            self._wait_for_mainpyfile = 0
+        """    
         if self.stop_here(frame):
             print >>self.stdout, '--Call--'
-            self.interaction(frame, None)
+            self.interaction(frame, None)"""
+        self.interaction(frame, None)
 
     def user_lineFlagClear(self):
         self.user_stopHereFlag = False
-        
+
     def user_line(self, frame):
         """This function is called when we stop or break at this line."""
         if self._wait_for_mainpyfile:
-            if (self.mainpyfile != self.canonic(frame.f_code.co_filename)
-                or frame.f_lineno<= 0):
+            if self.wait_for_mainpyfile(frame):
                 return
             self._wait_for_mainpyfile = 0
 
@@ -381,7 +384,42 @@ if does not have any loop, will stop at the caller of this function"""
         self.unset_traceEveryLine()
 
     do_ntel = do_notTraceEveryLine
+
+    def valid_call(self, arg, invalid_func, valid_func):
+        if not arg:
+            invalid_func()
+        else:
+            valid_func(arg)
+            
+    def do_traceClassMethod(self, arg):
+        self.valid_call(arg,
+                        self.help_traceClassMethod,
+                        self.set_traceClassMethod)
+        self.set_traceEveryLine()        
+
+    def help_traceClassMethod(self):
+        print >>self.stdout, """trace class method, when the method of special class invoked.
+It will enter interaction mode """        
+        
+    def do_clearTraceClassMethod(self, arg):
+        self.valid_call(arg,
+                        self.help_clearTraceClassMethod,
+                        self.unset_traceClassMethod)
+
+    def help_clearTraceClassMethod(self):
+        print >>self.stdout, """display trace class method
+arg explained:
+-1       : clear all
+n        : clear speical trace class method by index
+invalid n: will be ignore if n beyond the length of trace classes list"""
+
     
+    def do_infoTraceClassMethod(self, arg):
+           self.infoTraceClassMethod()
+
+    def help_infoTraceClassMethod(self):
+        print >>self.stdout, """display current trace class method"""
+        
     def do_commands(self, arg):
         """Defines a list of commands associated to a breakpoint.
 
@@ -557,6 +595,13 @@ if does not have any loop, will stop at the caller of this function"""
             print >>self.stdout, '*** Blank or comment'
             return 0
         return lineno
+
+    def  wait_for_mainpyfile(self, frame):
+        if (self.mainpyfile != self.canonic(frame.f_code.co_filename)
+                or frame.f_lineno<= 0):
+            return True
+        else:
+            return False
 
     def do_enable(self, arg):
         args = arg.split()
