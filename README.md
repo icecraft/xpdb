@@ -132,7 +132,7 @@ The program finished and will be restarted
     
 
 ### 待增加功能：
-  1： 输出格式的美化
+*  1： 输出格式的美化
     
 ```
         如 （Pdb） while f: print f; f = f.f_back  将被替换为
@@ -145,7 +145,11 @@ The program finished and will be restarted
         如 gdb 哪有的自定义命令和从配置文件中读取已有的命令定义
 
 
-*    3: 支持设置变量值
+*    ~~ 3: 支持设置变量值
+
+*   4： pydb jump, return命令支持
+
+*   5：rwatch 变量
 
 
 
