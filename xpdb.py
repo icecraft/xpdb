@@ -399,7 +399,7 @@ if does not have any loop, will stop at the caller of this function"""
 
     def help_traceClassMethod(self):
         print >>self.stdout, """trace class method, when the method of special class invoked.
-It will enter interaction mode """        
+It will enter interaction mode. support *a* style class name """        
         
     def do_clearTraceClassMethod(self, arg):
         self.valid_call(arg,

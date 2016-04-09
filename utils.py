@@ -4,7 +4,7 @@ import ast as _ast
 import sys
 import os.path
 
-__all__ = ["watchPointerList", "noWatchPoint", "getFinishLine"]
+__all__ = ["watchPointerList", "noWatchPoint", "getFinishLine", "colorStr"]
 
 def noWatchPoint():
     return watchPointerList.noWatchPoint
@@ -178,7 +178,18 @@ class getFinishLine(_ast.NodeVisitor):
                     self.min_co_lineno = min(self.min_co_lineno, i.lineno)
         for body in node.body:
             self.visit(body)
-            
+
+
+class colorStr(object):
+        @classmethod
+        def redStr(cls, s):
+               return "%s[31;2m%s%s[0m"%(chr(27), s, chr(27))
+
+        @classmethod
+        def greenStr(cls, s):
+                 return "%s[32;2m%s%s[0m"%(chr(27), s, chr(27))
+
+                                  
 class AstNodeDump(object):
     """dump beautiful"""
     def __init__(self, astObj):
@@ -190,3 +201,5 @@ class AstNodeDump(object):
 
 
 
+
+        

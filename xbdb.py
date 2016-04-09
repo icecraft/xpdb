@@ -4,8 +4,9 @@ import fnmatch
 import sys
 import os
 import types
-from utils import watchPointerList, noWatchPoint, getFinishLine
+from utils import watchPointerList, noWatchPoint, getFinishLine, colorStr
 from inspect import currentframe as _currentframe
+
 
 __all__ = ["BdbQuit","Bdb","Breakpoint"]
 
@@ -280,8 +281,13 @@ class Bdb:
         
         for pattern in self.traceClassName:
             pattern = pattern.strip('*')
-            if pattern in  str(frame.f_locals['self'].__class__):
-                return True
+            try:
+                """ for some frame.f_locals['self'] does not have attribute '__class__'
+"""
+                if pattern in  str(frame.f_locals['self'].__class__):
+                    return True
+            except:
+                pass
         return False    
     
     def _set_stopinfo(self, stopframe, returnframe, stoplineno=0):
@@ -475,7 +481,7 @@ class Bdb:
         filename = self.canonic(frame.f_code.co_filename)
         s = '%s(%r)' % (filename, lineno)
         if frame.f_code.co_name:
-            s = s + frame.f_code.co_name
+            s = s + colorStr.greenStr(frame.f_code.co_name)
         else:
             s = s + "<lambda>"
         if '__args__' in frame.f_locals:
@@ -491,7 +497,7 @@ class Bdb:
             s = s + '->'
             s = s + repr.repr(rv)
         line = linecache.getline(filename, lineno, frame.f_globals)
-        if line: s = s + lprefix + line.strip()
+        if line: s = s + lprefix + colorStr.greenStr(line.strip())
         return s
 
     # The following two methods can be called by clients to use
