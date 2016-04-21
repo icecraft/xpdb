@@ -4,11 +4,11 @@ import fnmatch
 import sys
 import os
 import types
-from utils import watchPointerList, noWatchPoint, getFinishLine, colorStr
-from inspect import currentframe as _currentframe
+from utils import watchPointerList, noWatchPoint,\
+    getFinishLine, colorStr
 
+__all__ = ["BdbQuit", "Bdb", "Breakpoint"]
 
-__all__ = ["BdbQuit","Bdb","Breakpoint"]
 
 class BdbQuit(Exception):
     """Exception to give up completely"""
@@ -56,7 +56,7 @@ class Bdb:
 
     def trace_dispatch(self, frame, event, arg):
         if self.quitting:
-            return # None
+            return  # None
         if event == 'line':
             return self.dispatch_line(frame)
         if event == 'call':
@@ -78,8 +78,8 @@ class Bdb:
         if self.stop_here(frame) or self.break_here(frame) \
            or self.user_stopHere(frame):
             if not self.stop_here(frame) or \
-                 self.remainStepTimes+self.remainNextTimes == 0 :
-                     self.user_line(frame)
+                 self.remainStepTimes+self.remainNextTimes == 0:
+                self.user_line(frame)
             if self.quitting: raise BdbQuit
         self.update_remainStepNext(frame)            
         return self.trace_dispatch
@@ -88,16 +88,16 @@ class Bdb:
         # XXX 'arg' is no longer used
         if self.botframe is None:
             # First call of dispatch since reset()
-            self.botframe = frame.f_back # (CT) Note that this may also be None!
+            self.botframe = frame.f_back  # (CT) Note that this may also be None!
             return self.trace_dispatch
-        if not (self.stop_here(frame) or \
-                self.break_anywhere(frame) or \
-                self.break_traceClassMethod(frame)) :
+        if not (self.stop_here(frame) or 
+                self.break_anywhere(frame) or 
+                self.break_traceClassMethod(frame)):
             # No need to trace this function
             if self.traceEveryLine:
                 return self.trace_dispatch
             else:
-                return # None
+                return  # None
         self.user_call(frame, arg)
         if self.quitting: raise BdbQuit
         return self.trace_dispatch
@@ -146,14 +146,14 @@ class Bdb:
 
     def break_here(self, frame):
         filename = self.canonic(frame.f_code.co_filename)
-        if not filename in self.breaks:
+        if filename not in self.breaks:
             return False
         lineno = frame.f_lineno
-        if not lineno in self.breaks[filename]:
+        if lineno not in self.breaks[filename]:
             # The line itself has no breakpoint, but maybe the line is the
             # first line of a function with breakpoint set by function name.
             lineno = frame.f_code.co_firstlineno
-            if not lineno in self.breaks[filename]:
+            if lineno not in self.breaks[filename]:
                 return False
 
         # flag says ok to delete temp. bp
@@ -207,11 +207,11 @@ class Bdb:
         retV = False
         if watchPointerList.findChangedPoint(frame):
             retV = True
-        elif self.info_for_finish :
+        elif self.info_for_finish:
             retV = True
-            while frame :
+            while frame:
                 if id(frame) == id(self.info_for_finish[2]):
-                     if  self.info_for_finish[1]>= frame.f_lineno >= self.info_for_finish[0]: 
+                    if self.info_for_finish[1]>= frame.f_lineno >= self.info_for_finish[0]: 
                         retV = False
                         break
                 frame = frame.f_back    
@@ -222,7 +222,7 @@ class Bdb:
         return retV    
 
     def update_remainStepNext(self, frame):
-            if self.remainStepTimes > 0 :
+            if self.remainStepTimes > 0:
                 self.remainStepTimes -= 1
                 self.set_step()
             elif self.remainNextTimes > 0:
@@ -250,7 +250,7 @@ class Bdb:
         self.traceEveryLine = True
         
     def unset_traceEveryLine(self):
-        if utils.noWatchPoint():
+        if noWatchPoint():
             self.traceEveryLine = False
             
     def set_traceClassMethod(self, arg):
@@ -264,19 +264,17 @@ class Bdb:
         else:
             self.infoTraceClassMethod()
             print >>sys.stdout, "working ...."
-            self.traceClassName =  reduce(lambda r, (x,y): r+[y] if x != int(arg) else r,
-                                          enumerate(self.traceClassName),
-                                          [])
+            self.traceClassName = reduce(lambda r, (x,y): r+[y] if x != int(arg) else r,
+                                         enumerate(self.traceClassName),
+                                         [])
             self.infoTraceClassMethod()            
-
             
     def infoTraceClassMethod(self):
         for index, name in enumerate(self.traceClassName):
             print index, " : ", name
 
-
     def break_traceClassMethod(self, frame):
-        if 'self' not in frame.f_locals :
+        if 'self' not in frame.f_locals:
             return False
         
         for pattern in self.traceClassName:
@@ -284,7 +282,7 @@ class Bdb:
             try:
                 """ for some frame.f_locals['self'] does not have attribute '__class__'
 """
-                if pattern in  str(frame.f_locals['self'].__class__):
+                if pattern in str(frame.f_locals['self'].__class__):
                     return True
             except:
                 pass
@@ -301,7 +299,7 @@ class Bdb:
     # Derived classes and clients can call the following methods
     # to affect the stepping state.
 
-    def set_until(self, frame): #the name "until" is borrowed from gdb
+    def set_until(self, frame):  #the name "until" is borrowed from gdb
         """Stop when the line with the line no greater than the current one is
         reached or when returning from current frame"""
         self._set_stopinfo(frame, frame, frame.f_lineno+1)
@@ -365,18 +363,18 @@ class Bdb:
     # Call self.get_*break*() to see the breakpoints or better
     # for bp in Breakpoint.bpbynumber: if bp: bp.bpprint().
 
-    def set_break(self, filename, lineno, temporary=0, cond = None,
+    def set_break(self, filename, lineno, temporary=0, cond=None,
                   funcname=None):
         filename = self.canonic(filename)
         import linecache # Import as late as possible
         line = linecache.getline(filename, lineno)
         if not line:
             return 'Line %s:%d does not exist' % (filename,
-                                   lineno)
-        if not filename in self.breaks:
+                                                  lineno)
+        if filename not in self.breaks:
             self.breaks[filename] = []
         list = self.breaks[filename]
-        if not lineno in list:
+        if lineno not in list:
             list.append(lineno)
         bp = Breakpoint(filename, lineno, temporary, cond, funcname)
 
@@ -388,11 +386,11 @@ class Bdb:
 
     def clear_break(self, filename, lineno):
         filename = self.canonic(filename)
-        if not filename in self.breaks:
+        if filename not in self.breaks:
             return 'There are no breakpoints in %s' % filename
         if lineno not in self.breaks[filename]:
             return 'There is no breakpoint at %s:%d' % (filename,
-                                    lineno)
+                                                        lineno)
         # If there's only one bp in the list for that file,line
         # pair, then remove the breaks entry
         for bp in Breakpoint.bplist[filename, lineno][:]:
@@ -415,7 +413,7 @@ class Bdb:
 
     def clear_all_file_breaks(self, filename):
         filename = self.canonic(filename)
-        if not filename in self.breaks:
+        if filename not in self.breaks:
             return 'There are no breakpoints in %s' % filename
         for line in self.breaks[filename]:
             blist = Breakpoint.bplist[filename, line]
@@ -607,7 +605,6 @@ class Breakpoint:
         else:
             self.bplist[file, line] = [self]
 
-
     def deleteMe(self):
         index = (self.file, self.line)
         self.bpbynumber[self.number] = None   # No longer in list
@@ -672,6 +669,7 @@ def checkfuncname(b, frame):
         # But we are not at the first line number: don't break.
         return False
     return True
+
 
 # Determines if there is an effective (active) breakpoint at this
 # line of code.  Returns breakpoint number or 0 if none

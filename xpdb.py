@@ -29,6 +29,7 @@ _saferepr = _repr.repr
 __all__ = ["run", "pm", "Pdb", "runeval", "runctx", "runcall", "set_trace",
            "post_mortem", "help"]
 
+
 def find_function(funcname, filename):
     cre = re.compile(r'def\s+%s\s*[(]' % re.escape(funcname))
     try:
@@ -56,6 +57,7 @@ def find_function(funcname, filename):
 # command "xpdb.line_prefix = '\n% '".
 # line_prefix = ': '    # Use this to get the old situation back
 line_prefix = '\n-> '   # Probably a better default
+
 
 class Pdb(xbdb.Bdb, cmd.Cmd):
 
@@ -95,15 +97,15 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
                 self.rcLines.append(line)
             rcFile.close()
 
-        self.commands = {} # associates a command list to breakpoint numbers
-        self.commands_doprompt = {} # for each bp num, tells if the prompt
-                                    # must be disp. after execing the cmd list
-        self.commands_silent = {} # for each bp num, tells if the stack trace
-                                  # must be disp. after execing the cmd list
-        self.commands_defining = False # True while in the process of defining
-                                       # a command list
-        self.commands_bnum = None # The breakpoint number for which we are
-                                  # defining a list
+        self.commands = {}  # associates a command list to breakpoint numbers
+        self.commands_doprompt = {}  # for each bp num, tells if the prompt
+                                     # must be disp. after execing the cmd list
+        self.commands_silent = {}  # for each bp num, tells if the stack trace
+                                   # must be disp. after execing the cmd list
+        self.commands_defining = False  # True while in the process of defining
+                                        # a command list
+        self.commands_bnum = None  # The breakpoint number for which we are
+                                   # defining a list
     
     def reset(self):
         xbdb.Bdb.reset(self)
@@ -292,8 +294,8 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
             return cmd.Cmd.onecmd(self, line)
         else:
             return self.handle_command_def(line)
-
-    def handle_command_def(self,line):
+        
+    def handle_command_def(self, line):
         """Handles one command line during command list definition."""
         cmd, arg, line = self.parseline(line)
         if not cmd:
@@ -362,7 +364,8 @@ if does not have any loop, will stop at the caller of this function"""
     def help_infoWatchPoint(self):
         print >>self.stdout, """display current watch point"""
 
-    help_infoWP = help_infoWatchPoint    
+    help_infoWP = help_infoWatchPoint
+    
     def help_watch(self):
         print >> self.stdout, """set watch point""" 
 
@@ -390,7 +393,7 @@ if does not have any loop, will stop at the caller of this function"""
             invalid_func()
         else:
             valid_func(arg)
-            
+    
     def do_traceClassMethod(self, arg):
         self.valid_call(arg,
                         self.help_traceClassMethod,
@@ -399,7 +402,8 @@ if does not have any loop, will stop at the caller of this function"""
 
     def help_traceClassMethod(self):
         print >>self.stdout, """trace class method, when the method of special class invoked.
-It will enter interaction mode. support *a* style class name """        
+It will enter interaction mode. support *a* style class name.
+Amazing! it also works on module name instead of a speical class name """        
         
     def do_clearTraceClassMethod(self, arg):
         self.valid_call(arg,
