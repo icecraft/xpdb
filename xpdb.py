@@ -50,7 +50,7 @@ def find_function(funcname, filename):
     fp.close()
     return answer
 
-
+    
 # Interaction prompt line will separate file and call info from code
 # text using value of line_prefix string.  A newline and arrow may
 # be to your liking.  You can set it once xpdb is imported using the
@@ -170,7 +170,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
             self.interaction(frame, None)
         self.user_lineFlagClear()
 
-    def bp_commands(self,frame):
+    def bp_commands(self, frame):
         """Call every command that was set for the current active breakpoint
         (if there is one).
 
@@ -416,10 +416,9 @@ arg explained:
 -1       : clear all
 n        : clear speical trace class method by index
 invalid n: will be ignore if n beyond the length of trace classes list"""
-
     
     def do_infoTraceClassMethod(self, arg):
-           self.infoTraceClassMethod()
+        self.infoTraceClassMethod()
 
     def help_infoTraceClassMethod(self):
         print >>self.stdout, """display current trace class method"""
@@ -451,7 +450,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             self.commands_defining = False
             self.prompt = prompt_back
 
-    def do_break(self, arg, temporary = 0):
+    def do_break(self, arg, temporary=0):
         # break [ ([filename:]lineno | function) [, "condition"] ]
         if not arg:
             if self.breaks:  # There's at least one
@@ -600,9 +599,9 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             return 0
         return lineno
 
-    def  wait_for_mainpyfile(self, frame):
+    def wait_for_mainpyfile(self, frame):
         if (self.mainpyfile != self.canonic(frame.f_code.co_filename)
-                or frame.f_lineno<= 0):
+                or frame.f_lineno <= 0):
             return True
         else:
             return False
@@ -666,7 +665,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 print >>self.stdout, 'Breakpoint', bpnum,
                 print >>self.stdout, 'is now unconditional.'
 
-    def do_ignore(self,arg):
+    def do_ignore(self, arg):
         """arg is bp number followed by ignore count."""
         args = arg.split()
         try:
@@ -774,7 +773,6 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         self.set_until(self.curframe)
         return 1
     do_unt = do_until
-
     
     def do_step(self, arg):
         self.clear_stepNextTimes()
@@ -954,7 +952,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
     def do_whatis(self, arg):
         try:
             value = eval(arg, self.curframe.f_globals,
-                            self.curframe_locals)
+                         self.curframe_locals)
         except:
             t, v = sys.exc_info()[:2]
             if type(t) == type(''):
@@ -1167,7 +1165,6 @@ one is reached or until the current frame returns"""
 Continue execution until the reach currentLine plus lineNum ( if not trigger any
   breakpoint or watchpoint ) in the current function is reached or it returns."""
 
-
     def help_return(self):
         self.help_r()
 
@@ -1334,10 +1331,10 @@ see no sign that the breakpoint was reached.
         lookupmodule() translates (possibly incomplete) file or module name
         into an absolute file name.
         """
-        if os.path.isabs(filename) and  os.path.exists(filename):
+        if os.path.isabs(filename) and os.path.exists(filename):
             return filename
         f = os.path.join(sys.path[0], filename)
-        if  os.path.exists(f) and self.canonic(f) == self.mainpyfile:
+        if os.path.exists(f) and self.canonic(f) == self.mainpyfile:
             return f
         root, ext = os.path.splitext(filename)
         if ext == '':
@@ -1360,10 +1357,10 @@ see no sign that the breakpoint was reached.
         # (this gets rid of xpdb's globals and cleans old variables on restarts).
         import __main__
         __main__.__dict__.clear()
-        __main__.__dict__.update({"__name__"    : "__main__",
-                                  "__file__"    : filename,
+        __main__.__dict__.update({"__name__": "__main__",
+                                  "__file__": filename,
                                   "__builtins__": __builtins__,
-                                 })
+                                  })
 
         # When xbdb sets tracing, a number of call and line events happens
         # BEFORE debugger even reaches user's code (and the exact sequence of
@@ -1378,23 +1375,29 @@ see no sign that the breakpoint was reached.
 
 # Simplified interface
 
+
 def run(statement, globals=None, locals=None):
     Pdb().run(statement, globals, locals)
 
+    
 def runeval(expression, globals=None, locals=None):
     return Pdb().runeval(expression, globals, locals)
+
 
 def runctx(statement, globals, locals):
     # B/W compatibility
     run(statement, globals, locals)
 
+    
 def runcall(*args, **kwds):
     return Pdb().runcall(*args, **kwds)
+
 
 def set_trace():
     Pdb().set_trace(sys._getframe().f_back)
 
 # Post-Mortem interface
+
 
 def post_mortem(t=None):
     # handling the default
@@ -1410,6 +1413,7 @@ def post_mortem(t=None):
     p.reset()
     p.interaction(None, t)
 
+    
 def pm():
     post_mortem(sys.last_traceback)
 
@@ -1418,9 +1422,11 @@ def pm():
 
 TESTCMD = 'import x; x.main()'
 
+
 def test():
     run(TESTCMD)
 
+    
 # print help
 def help():
     for dirname in sys.path:
@@ -1433,12 +1439,13 @@ def help():
         print 'Sorry, can\'t find the help file "xpdb.doc"',
         print 'along the Python search path'
 
+        
 def main():
     if not sys.argv[1:] or sys.argv[1] in ("--help", "-h"):
         print "usage: xpdb.py scriptfile [arg] ..."
         sys.exit(2)
 
-    mainpyfile =  sys.argv[1]     # Get script filename
+    mainpyfile = sys.argv[1]     # Get script filename
     if not os.path.exists(mainpyfile):
         print 'Error:', mainpyfile, 'does not exist'
         sys.exit(1)

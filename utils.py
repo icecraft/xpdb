@@ -6,107 +6,108 @@ import os.path
 
 __all__ = ["watchPointerList", "noWatchPoint", "getFinishLine", "colorStr"]
 
+
 def noWatchPoint():
     return watchPointerList.noWatchPoint
-        
+
+
 class watchPointerList(object):
-      """ step watch """
-      _watchPList = []
-      _argList = None
+    """ step watch """
+    _watchPList = []
+    _argList = None
 
-      @classmethod
-      def reset(cls):
-          cls._watchPList = []
+    @classmethod
+    def reset(cls):
+        cls._watchPList = []
           
-      @classmethod
-      def showWatchPoint(cls):
-          if noWatchPoint():
-              print >> sys.stdout, "do not set any WatchPoints now!"
-              return 
-          for di in cls._watchPList:
-              print >> sys.stdout, "watchPoints: %s[%s] = %s" %(di[0], di[1], di[2])
-
+    @classmethod
+    def showWatchPoint(cls):
+        if noWatchPoint():
+            print >> sys.stdout, "do not set any WatchPoints now!"
+            return 
+        for di in cls._watchPList:
+            print >> sys.stdout, "watchPoints: %s[%s] = %s" %(di[0], di[1], di[2])
           
-      @classmethod
-      def noWatchPoint(cls):
-          return len(cls._watchPList) == 0
+    @classmethod
+    def noWatchPoint(cls):
+        return len(cls._watchPList) == 0
       
-      @classmethod
-      def _getId(cls, astT):
-          for i in _ast.walk(astT):
-              if hasattr(i, 'id'):
-                  return i.id
-          print >> sys.stdout, "Error! can not get NameId"
-          return "error"
+    @classmethod
+    def _getId(cls, astT):
+        for i in _ast.walk(astT):
+            if hasattr(i, 'id'):
+                return i.id
+        print >> sys.stdout, "Error! can not get NameId"
+        return "error"
 
-      @classmethod
-      def removeWatchPoint(cls, arg):
-          """ if the name of watchPonter A, B are same, will remove on randomly!
-          """
-          for di in cls._watchPList:
-                  ni == di[-1]
-                  if ni == arg:
-                      cls._watchPList.remove(di)
-                      print >> sys.stdout, "watch Point %s removed succ!" %arg
-                      if cls.noWatchPoint:
-                          print >> sys.stdout, "no watch points NOW !"
-                      return
-          print >> sys.stdout, "failed to remove watch Point %s" %arg
- 
-                  
-      @classmethod
-      def findChangedPoint(cls, frame):
-          retV = False
-          for di in cls._watchPList:
-            try :
-                   f,  value, eexp, id_f = di[0], di[2], di[3], di[4]
+    @classmethod
+    def removeWatchPoint(cls, arg):
+        """ if the name of watchPonter A, B are same, will remove on randomly!
+        """
+        for di in cls._watchPList:
+            ni == di[-1]
+            if ni == arg:
+                cls._watchPList.remove(di)
+                print >> sys.stdout, "watch Point %s removed succ!" % arg
+                if cls.noWatchPoint:
+                    print >> sys.stdout, "no watch points NOW !"
+                    return
+                else:
+                    print >> sys.stdout, "failed to remove watch Point %s" % arg
+                   
+    @classmethod
+    def findChangedPoint(cls, frame):
+        retV = False
+        for di in cls._watchPList:
+            try:
+                f, value, eexp, id_f = di[0], di[2], di[3], di[4]
                     
-                   newValue = eval(eexp, f) if id_f != id(frame) else eval(eexp, frame.f_locals, frame.f_globals)
-                   if   newValue != value:
-                          print ' WatchPoint %s: Old Value = %s, New Value = %s' %(eexp, value, newValue)
-                          di[2] = newValue
-                          retV = True
+                newValue = eval(eexp, f) if id_f != id(frame) else eval(eexp, frame.f_locals, frame.f_globals)
+                if newValue != value:
+                    print ' WatchPoint %s: Old Value = %s, New Value = %s' %(eexp, value, newValue)
+                    di[2] = newValue
+                    retV = True
             except KeyError, TypeError:
                 cls._watchPList.remove(di)
-          return retV
+        return retV
       
-      @classmethod
-      def addWatchPoint(cls, f, arg):
-          """ watch the name of point in nearest namespace,
+    @classmethod
+    def addWatchPoint(cls, f, arg):
+        """ watch the name of point in nearest namespace,
 for example: if namespace A, B both have var a, the watch pointer may attach to A.a or B.a"""
           """can not find in that"""
-          try:
-              _value = eval(arg, f.f_locals, f.f_globals)
-              astT = _ast.parse(arg)
-              _id = cls._getId(astT)
-              print _value, _id
-              if _id == 'error':
-                  raise NoThisVarError
+        try:
+            _value = eval(arg, f.f_locals, f.f_globals)
+            astT = _ast.parse(arg)
+            _id = cls._getId(astT)
+            print _value, _id
+            if _id == 'error':
+                raise NoThisVarError
               
-              while f:
-                      if f.f_locals.has_key(_id) or f.f_globals.has_key(_id):
-                          wd = f.f_locals if f.f_locals.has_key(_id) else f.f_globals
-                          cls._watchPList.append([_copy(wd) , _id, _value, arg, id(f)])
-                          print >> sys.stdout, "Succ to Add Watch Point"
-                          wd = None
-                          return 
-                      f = f.f_back
+            while f:
+                if f.f_locals.has_key(_id) or f.f_globals.has_key(_id):
+                    wd = f.f_locals if f.f_locals.has_key(_id) else f.f_globals
+                    cls._watchPList.append([_copy(wd) , _id, _value, arg, id(f)])
+                    print >> sys.stdout, "Succ to Add Watch Point"
+                    wd = None
+                    return 
+                f = f.f_back
                       
-              raise NotFoundError            
-          except Exception as e:
-              print >> sys.stdout, "Failed to Add Watch Point for", e
+                raise NotFoundError            
+        except Exception as e:
+            print >> sys.stdout, "Failed to Add Watch Point for", e
 
 
 class NoThisVarError(Exception):
-      def __str__(self):
-            return "NoThisVarError: can not find this variable"
+    def __str__(self):
+        return "NoThisVarError: can not find this variable"
 
+    
 class NotFoundError(Exception):
-     def __str__(self):
-         return "NotFoundError: ATTENTION :my func can not find this var, but eval can! "
+    def __str__(self):
+        return "NotFoundError: ATTENTION :my func can not find this var, but eval can! "
 
-
-
+    
 class getFinishLine(_ast.NodeVisitor):
     """ to support xpdb command finish"""
     def lookupmodule(self, filename):
@@ -115,10 +116,10 @@ class getFinishLine(_ast.NodeVisitor):
         lookupmodule() translates (possibly incomplete) file or module name
         into an absolute file name.
         """
-        if os.path.isabs(filename) and  os.path.exists(filename):
+        if os.path.isabs(filename) and os.path.exists(filename):
             return filename
         f = os.path.join(sys.path[0], filename)
-        if  os.path.exists(f) :
+        if os.path.exists(f):
             return f
         root, ext = os.path.splitext(filename)
         if ext == '':
@@ -154,10 +155,10 @@ class getFinishLine(_ast.NodeVisitor):
     def locate_scope(self, node):
         tnode = None
         for body in node.body:
-            if  (body.__class__.__name__ in "While_For_FunctionDef" ) and \
+            if (body.__class__.__name__ in "While_For_FunctionDef") and \
                body.lineno < self.co_lineno:
                     tnode = body
-        if tnode :
+        if tnode:
             return [tnode] + self.locate_scope(tnode)
         else:
             return [None]
@@ -167,7 +168,7 @@ class getFinishLine(_ast.NodeVisitor):
 
     def visit_FunctionDef(self, node):
         if node.name == self.co_funcn:
-            scope  = [node]
+            scope = [node]
             scope.extend(self.locate_scope(node))
             scope.pop()
             for i in _ast.walk(scope[-1]):
@@ -181,23 +182,16 @@ class getFinishLine(_ast.NodeVisitor):
 
 
 class colorStr(object):
-        @classmethod
-        def redStr(cls, s):
-               return "%s[31;2m%s%s[0m"%(chr(27), s, chr(27))
+    @classmethod
+    def redStr(cls, s):
+        return "%s[31;2m%s%s[0m"%(chr(27), s, chr(27))
 
-        @classmethod
-        def greenStr(cls, s):
-                 return "%s[32;2m%s%s[0m"%(chr(27), s, chr(27))
+    @classmethod
+    def greenStr(cls, s):
+        return "%s[32;2m%s%s[0m"%(chr(27), s, chr(27))
 
                                   
-class AstNodeDump(object):
-    """dump beautiful"""
-    def __init__(self, astObj):
-        self.indented = ['FunctionDef', 'ClassDef', 'TryFinally'] 
-        self.indentedWithElse = ['For', 'While', 'If', 'With', 'orelse', 'TryExcept']
-        self.ind = []
-        self.ind.extend(self.indented)
-        self.ind.extend(self.indentedWithElse)
+
 
 
 
