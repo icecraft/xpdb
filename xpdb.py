@@ -335,7 +335,8 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
 
     def help_shell(self):
         print >> self.stdout, "invoke bash shell!"
-        
+
+    
     def do_watch(self, arg):
         """the name of watch Point should not have space"""
         self.set_watchPoint(self.curframe, arg)
@@ -393,7 +394,25 @@ if does not have any loop, will stop at the caller of this function"""
             invalid_func()
         else:
             valid_func(arg)
-    
+
+    def do_logon(self, arg):
+        arg = "xpdb.log" if not arg else arg
+        try:
+            self._logfd.close()
+        except:
+            self._logfd = open(arg, "wb")
+            self._sys_stdout  = self.stdout
+            self.stdout = self._logfd
+
+    def help_logon(self, arg):
+        print >> self.stdout, """ enable log, just like gdb log on """
+
+    def do_logoff(self, arg):
+        try:
+            self.stdout = self._sys_stdout
+        except:
+            pass
+        
     def do_traceClassMethod(self, arg):
         self.valid_call(arg,
                         self.help_traceClassMethod,

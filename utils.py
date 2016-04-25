@@ -4,7 +4,8 @@ import ast as _ast
 import sys
 import os.path
 
-__all__ = ["watchPointerList", "noWatchPoint", "getFinishLine", "colorStr"]
+__all__ = ["watchPointerList", "noWatchPoint", "getFinishLine",
+           "colorStr"]
 
 
 def noWatchPoint():
@@ -75,7 +76,6 @@ class watchPointerList(object):
     def addWatchPoint(cls, f, arg):
         """ watch the name of point in nearest namespace,
 for example: if namespace A, B both have var a, the watch pointer may attach to A.a or B.a"""
-          """can not find in that"""
         try:
             _value = eval(arg, f.f_locals, f.f_globals)
             astT = _ast.parse(arg)
@@ -190,10 +190,4 @@ class colorStr(object):
     def greenStr(cls, s):
         return "%s[32;2m%s%s[0m"%(chr(27), s, chr(27))
 
-                                  
 
-
-
-
-
-        
