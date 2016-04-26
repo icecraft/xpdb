@@ -4,8 +4,9 @@ import ast as _ast
 import sys
 import os.path
 
+
 __all__ = ["watchPointerList", "noWatchPoint", "getFinishLine",
-           "colorStr"]
+           "colorStr", "logFile"]
 
 
 def noWatchPoint():
@@ -194,4 +195,35 @@ class colorStr(object):
     def greenStr(cls, s):
         return "%s[32;2m%s%s[0m"%(chr(27), s, chr(27))
 
+    
+class logFile(object):
+    log_fd = None
+    save_stdout = None
+        
+    @classmethod
+    def dup(cls, arg):
+            
+        if cls.log_fd: cls.log_fd.close()
+        if not cls.save_stdout: cls.save_stdout = sys.stdout
+            
+        cls.log_fd = open(arg, 'w+')
+        sys.stdout = cls
+        return cls
 
+    @classmethod    
+    def close(cls):
+        if cls.log_fd:
+            cls.log_fd.close()
+            cls.log_fd = None
+        if cls.save_stdout:
+            sys.stdout = cls.save_stdout
+            cls.save_stdout = None
+
+    @classmethod        
+    def write(cls, value):
+        if cls.log_fd:
+            cls.log_fd.write(value)
+            cls.log_fd.write('\n')
+        cls.save_stdout.write(value)
+        cls.save_stdout.write('\n')
+        

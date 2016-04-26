@@ -14,6 +14,7 @@ import re
 import pprint
 import traceback
 import subprocess as sub
+from utils import logFile
 
 
 class Restart(Exception):
@@ -398,21 +399,13 @@ if does not have any loop, will stop at the caller of this function""")
 
     def do_logon(self, arg):
         arg = "xpdb.log" if not arg else arg
-        try:
-            self._logfd.close()
-        except:
-            self._logfd = open(arg, "wb")
-            self._sys_stdout  = self.stdout
-            self.stdout = self._logfd
+        self.stdout = logFile.dup(arg)
 
     def help_logon(self, arg):
-        self.stdout.write(""" enable log, just like gdb log on """)
+        print >> self.stdout, """enable log, just like gdb log on """
 
     def do_logoff(self, arg):
-        try:
-            self.stdout = self._sys_stdout
-        except:
-            pass
+        logFile.close()
         
     def do_traceClassMethod(self, arg):
         self.valid_call(arg,
