@@ -68,8 +68,9 @@ class watchPointerList(object):
                 newValue = eval(eexp, f) if id_f != id(frame) \
                                else eval(eexp, frame.f_locals, frame.f_globals)
                 if newValue != value:
-                    sys.stdout.write('WatchPoint %s: Old Value = %s,\
-                                    New Value = %s' % (eexp, value, newValue))
+                    sys.stdout.write('WatchPoint %s: Old Value = %s, New Value = %s'
+                                     % (eexp, value, newValue))
+                    sys.stdout.write('\n')
                     di[2] = newValue
                     retV = True
             except KeyError, TypeError:
@@ -93,6 +94,7 @@ for example: if namespace A, B both have var a, the watch pointer may attach to 
                     wd = f.f_locals if f.f_locals.has_key(_id) else f.f_globals
                     cls._watchPList.append([_copy(wd) , _id, _value, arg, id(f)])
                     sys.stdout.write("Succ to Add Watch Point")
+                    sys.stdout.write('\n')
                     wd = None
                     return 
                 f = f.f_back
@@ -101,7 +103,7 @@ for example: if namespace A, B both have var a, the watch pointer may attach to 
         except Exception as e:
             sys.stdout.write("Failed to Add Watch Point for %s"
                              % repr(e))
-
+            sys.stdout.write('\n')
 
 class NoThisVarError(Exception):
     def __str__(self):
