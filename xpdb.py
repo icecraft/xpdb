@@ -137,7 +137,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
             for line in rcLines:
                 line = line[:-1]
                 if len(line) > 0 and line[0] != '#':
-                    print line
+                    self.stdout.write(line)
                     self.onecmd(line)
 
     # Override Bdb methods
@@ -199,11 +199,11 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         if self._wait_for_mainpyfile:
             return
         frame.f_locals['__return__'] = return_value
-        print >>self.stdout, '--Return--'
+        self.stdout.write('--Return--')
         self.interaction(frame, None)
 
     def user_exception(self, frame, exc_info):
-        print frame, exc_info
+        self.stdout.write("%s%s" % (frame, exc_info))
         """This function is called if an exception occurs,
         but only if we are to stop at or just below this level."""
         if self._wait_for_mainpyfile:
@@ -213,7 +213,8 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         if type(exc_type) == type(''):
             exc_type_name = exc_type
         else: exc_type_name = exc_type.__name__
-        print >>self.stdout, exc_type_name + ':', _saferepr(exc_value)
+        self.stdout.write("%s : %s" % (repr(exc_type_name),
+                                       _saferepr(exc_value)))
         self.interaction(frame, exc_traceback)
 
     # General interaction function
@@ -231,7 +232,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         """
         # reproduce the behavior of the standard displayhook, not printing None
         if obj is not None:
-            print repr(obj)
+            self.stdout.write(repr(obj))
 
     def default(self, line):
         if line[:1] == '!': line = line[1:]
@@ -256,7 +257,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
             if type(t) == type(''):
                 exc_type_name = t
             else: exc_type_name = t.__name__
-            print >>self.stdout, '***', exc_type_name + ':', v
+            self.stdout.write('*** %s : %s' % (repr(exc_type_name), repr(v)))
 
     def precmd(self, line):
         """Handle alias expansion and ';;' separator."""
@@ -334,7 +335,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         sub.call(['bash'])
 
     def help_shell(self):
-        print >> self.stdout, "invoke bash shell!"
+        print >>self.stdout, "invoke bash shell!"
 
     
     def do_watch(self, arg):
@@ -359,19 +360,19 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         return 1    
 
     def help_finish(self):
-        print >> self.stdout, """ jump nearest while or for loop in a function,
-if does not have any loop, will stop at the caller of this function""" 
+        self.stdout.write(""" jump nearest while or for loop in a function,
+if does not have any loop, will stop at the caller of this function""") 
     
     def help_infoWatchPoint(self):
-        print >>self.stdout, """display current watch point"""
+        self.stdout.write("""display current watch point""")
 
     help_infoWP = help_infoWatchPoint
     
     def help_watch(self):
-        print >> self.stdout, """set watch point""" 
+        self.stdout.write("""set watch point""") 
 
     def help_unsetWatch(self):
-        print >> self.stdout, """unset watch point"""
+        self.stdout.write("""unset watch point""")
     
     def do_src(self, arg):
         if os.path.isdir(arg):
@@ -405,7 +406,7 @@ if does not have any loop, will stop at the caller of this function"""
             self.stdout = self._logfd
 
     def help_logon(self, arg):
-        print >> self.stdout, """ enable log, just like gdb log on """
+        self.stdout.write(""" enable log, just like gdb log on """)
 
     def do_logoff(self, arg):
         try:
@@ -420,9 +421,9 @@ if does not have any loop, will stop at the caller of this function"""
         self.set_traceEveryLine()        
 
     def help_traceClassMethod(self):
-        print >>self.stdout, """trace class method, when the method of special class invoked.
+        self.stdout.write("""trace class method, when the method of special class invoked.
 It will enter interaction mode. support *a* style class name.
-Amazing! it also works on module name instead of a speical class name """        
+Amazing! it also works on module name instead of a speical class name """)        
         
     def do_clearTraceClassMethod(self, arg):
         self.valid_call(arg,
@@ -430,17 +431,17 @@ Amazing! it also works on module name instead of a speical class name """
                         self.unset_traceClassMethod)
 
     def help_clearTraceClassMethod(self):
-        print >>self.stdout, """display trace class method
+        self.stdout.write("""display trace class method
 arg explained:
 -1       : clear all
 n        : clear speical trace class method by index
-invalid n: will be ignore if n beyond the length of trace classes list"""
+invalid n: will be ignore if n beyond the length of trace classes list""")
     
     def do_infoTraceClassMethod(self, arg):
         self.infoTraceClassMethod()
 
     def help_infoTraceClassMethod(self):
-        print >>self.stdout, """display current trace class method"""
+        self.stdout.write("""display current trace class method""")
         
     def do_commands(self, arg):
         """Defines a list of commands associated to a breakpoint.
@@ -453,8 +454,8 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             try:
                 bnum = int(arg)
             except:
-                print >>self.stdout, "Usage : commands [bnum]\n        ..." \
-                                     "\n        end"
+                self.stdout.write("Usage : commands [bnum]\n        ...\
+                                     \n        end")
                 return
         self.commands_bnum = bnum
         self.commands[bnum] = []
@@ -473,7 +474,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         # break [ ([filename:]lineno | function) [, "condition"] ]
         if not arg:
             if self.breaks:  # There's at least one
-                print >>self.stdout, "Num Type         Disp Enb   Where"
+                self.stdout.write("Num Type         Disp Enb   Where")
                 for bp in xbdb.Breakpoint.bpbynumber:
                     if bp:
                         bp.bpprint(self.stdout)
@@ -495,8 +496,8 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             filename = arg[:colon].rstrip()
             f = self.lookupmodule(filename)
             if not f:
-                print >>self.stdout, '*** ', repr(filename),
-                print >>self.stdout, 'not found from sys.path'
+                self.stdout.write('*** %s' % repr(filename))
+                self.stdout.write('not found from sys.path')
                 return
             else:
                 filename = f
@@ -504,7 +505,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             try:
                 lineno = int(arg)
             except ValueError, msg:
-                print >>self.stdout, '*** Bad lineno:', arg
+                self.stdout.write('*** Bad lineno:%s' % arg)
                 return
         else:
             # no colon; can be lineno or function
@@ -530,12 +531,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                     # last thing to try
                     (ok, filename, ln) = self.lineinfo(arg)
                     if not ok:
-                        print >>self.stdout, '*** The specified object',
-                        print >>self.stdout, repr(arg),
-                        print >>self.stdout, 'is not a function'
-                        print >>self.stdout, 'or was not found along sys.path.'
+                        self.stdout.write('*** The specified object')
+                        self.stdout.write(repr(arg))
+                        self.stdout.write('is not a function')
+                        self.stdout.write('or was not found along sys.path.')
                         return
-                    funcname = ok # ok contains a function name
+                    funcname = ok  # ok contains a function name
                     lineno = int(ln)
         if not filename:
             filename = self.defaultFile()
@@ -544,12 +545,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if line:
             # now set the break point
             err = self.set_break(filename, line, temporary, cond, funcname)
-            if err: print >>self.stdout, '***', err
+            if err: self.stdout.write('***%s' % repr(err))
             else:
                 bp = self.get_breaks(filename, line)[-1]
-                print >>self.stdout, "Breakpoint %d at %s:%d" % (bp.number,
+                self.stdout.write("Breakpoint %d at %s:%d" % (bp.number,
                                                                  bp.file,
-                                                                 bp.line)
+                                                                 bp.line))
 
     # To be overridden in derived debuggers
     def defaultFile(self):
@@ -608,13 +609,13 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         globs = self.curframe.f_globals if hasattr(self, 'curframe') else None
         line = linecache.getline(filename, lineno, globs)
         if not line:
-            print >>self.stdout, 'End of file'
+            self.stdout.write('End of file')
             return 0
         line = line.strip()
         # Don't allow setting breakpoint at a blank line
         if (not line or (line[0] == '#') or
              (line[:3] == '"""') or line[:3] == "'''"):
-            print >>self.stdout, '*** Blank or comment'
+            self.stdout.write('*** Blank or comment')
             return 0
         return lineno
 
@@ -631,11 +632,11 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             try:
                 i = int(i)
             except ValueError:
-                print >>self.stdout, 'Breakpoint index %r is not a number' % i
+                self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
             if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
-                print >>self.stdout, 'No breakpoint numbered', i
+                self.stdout.write('No breakpoint numbered %s', repr(i))
                 continue
 
             bp = xbdb.Breakpoint.bpbynumber[i]
@@ -648,11 +649,11 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             try:
                 i = int(i)
             except ValueError:
-                print >>self.stdout, 'Breakpoint index %r is not a number' % i
+                self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
             if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
-                print >>self.stdout, 'No breakpoint numbered', i
+                self.stdout.write('No breakpoint numbered %r' % i)
                 continue
 
             bp = xbdb.Breakpoint.bpbynumber[i]
@@ -666,8 +667,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             bpnum = int(args[0].strip())
         except ValueError:
             # something went wrong
-            print >>self.stdout, \
-                'Breakpoint index %r is not a number' % args[0]
+            self.stdout.write('Breakpoint index %r is not a number' % args[0])
             return
         try:
             cond = args[1]
@@ -676,13 +676,13 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         try:
             bp = xbdb.Breakpoint.bpbynumber[bpnum]
         except IndexError:
-            print >>self.stdout, 'Breakpoint index %r is not valid' % args[0]
+            self.stdout.write('Breakpoint index %r is not valid' % args[0])
             return
         if bp:
             bp.cond = cond
             if not cond:
-                print >>self.stdout, 'Breakpoint', bpnum,
-                print >>self.stdout, 'is now unconditional.'
+                self.stdout.write('Breakpoint %r', bpnum)
+                self.stdout.write('is now unconditional.')
 
     def do_ignore(self, arg):
         """arg is bp number followed by ignore count."""
@@ -691,8 +691,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             bpnum = int(args[0].strip())
         except ValueError:
             # something went wrong
-            print >>self.stdout, \
-                'Breakpoint index %r is not a number' % args[0]
+            self.stdout.write('Breakpoint index %r is not a number' % args[0])
             return
         try:
             count = int(args[1].strip())
@@ -701,7 +700,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         try:
             bp = xbdb.Breakpoint.bpbynumber[bpnum]
         except IndexError:
-            print >>self.stdout, 'Breakpoint index %r is not valid' % args[0]
+            self.stdout.write('Breakpoint index %r is not valid' % args[0])
             return
         if bp:
             bp.ignore = count
@@ -711,10 +710,10 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                     reply = reply + '%d crossings' % count
                 else:
                     reply = reply + '1 crossing'
-                print >>self.stdout, reply + ' of breakpoint %d.' % bpnum
+                self.stdout.write('%s of breakpoint %d.' % (reply, bpnum))
             else:
-                print >>self.stdout, 'Will stop next time breakpoint',
-                print >>self.stdout, bpnum, 'is reached.'
+                self.stdout.write('Will stop next time breakpoint')
+                self.stdout.write('%r is reached.' % bpnum)
 
     def do_clear(self, arg):
         """Three possibilities, tried in this order:
@@ -741,24 +740,24 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 err = "Invalid line number (%s)" % arg
             else:
                 err = self.clear_break(filename, lineno)
-            if err: print >>self.stdout, '***', err
+            if err: self.stdout.write( '*** %s' % repr(err))
             return
         numberlist = arg.split()
         for i in numberlist:
             try:
                 i = int(i)
             except ValueError:
-                print >>self.stdout, 'Breakpoint index %r is not a number' % i
+                self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
             if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
-                print >>self.stdout, 'No breakpoint numbered', i
+                self.stdout.write('No breakpoint numbered %r' % i)
                 continue
             err = self.clear_bpbynumber(i)
             if err:
-                print >>self.stdout, '***', err
+                self.stdout.write('***%s' % repr(err))
             else:
-                print >>self.stdout, 'Deleted breakpoint', i
+                self.stdout.write('Deleted breakpoint %r' % i)
     do_cl = do_clear # 'c' is already an abbreviation for 'continue'
 
     def do_where(self, arg):
@@ -768,7 +767,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_up(self, arg):
         if self.curindex == 0:
-            print >>self.stdout, '*** Oldest frame'
+            self.stdout.write('*** Oldest frame')
         else:
             self.curindex = self.curindex - 1
             self.curframe = self.stack[self.curindex][0]
@@ -779,7 +778,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_down(self, arg):
         if self.curindex + 1 == len(self.stack):
-            print >>self.stdout, '*** Newest frame'
+            self.stdout.write('*** Newest frame')
         else:
             self.curindex = self.curindex + 1
             self.curframe = self.stack[self.curindex][0]
@@ -835,12 +834,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_jump(self, arg):
         if self.curindex + 1 != len(self.stack):
-            print >>self.stdout, "*** You can only jump within the bottom frame"
+            self.stdout.write("*** You can only jump within the bottom frame")
             return
         try:
             arg = int(arg)
         except ValueError:
-            print >>self.stdout, "*** The 'jump' command requires a line number."
+            self.stdout.write("*** The 'jump' command requires a line number.")
         else:
             try:
                 # Do the jump, fix up our copy of the stack, and display the
@@ -849,7 +848,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 self.stack[self.curindex] = self.stack[self.curindex][0], arg
                 self.print_stack_entry(self.stack[self.curindex])
             except ValueError, e:
-                print >>self.stdout, '*** Jump failed:', e
+                self.stdout.write('*** Jump failed: %s' % repr(e))
     do_j = do_jump
 
     def do_debug(self, arg):
@@ -858,9 +857,9 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         locals = self.curframe_locals
         p = Pdb(self.completekey, self.stdin, self.stdout)
         p.prompt = "(%s) " % self.prompt.strip()
-        print >>self.stdout, "ENTERING RECURSIVE DEBUGGER"
+        self.stdout.write("ENTERING RECURSIVE DEBUGGER")
         sys.call_tracing(p.run, (arg, globals, locals))
-        print >>self.stdout, "LEAVING RECURSIVE DEBUGGER"
+        self.stdout.write("LEAVING RECURSIVE DEBUGGER")
         sys.settrace(self.trace_dispatch)
         self.lastcmd = p.lastcmd
 
@@ -873,7 +872,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
     do_exit = do_quit
 
     def do_EOF(self, arg):
-        print >>self.stdout
+        self.stdout.write('')
         self._user_requested_quit = 1
         self.set_quit()
         return 1
@@ -886,16 +885,16 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if co.co_flags & 8: n = n+1
         for i in range(n):
             name = co.co_varnames[i]
-            print >>self.stdout, name, '=',
-            if name in dict: print >>self.stdout, dict[name]
-            else: print >>self.stdout, "*** undefined ***"
+            self.stdout.write('= %s' % name)
+            if name in dict: self.stdout.write(repr(dict[name]))
+            else: self.stdout.write("*** undefined ***")
     do_a = do_args
 
     def do_retval(self, arg):
         if '__return__' in self.curframe_locals:
-            print >>self.stdout, self.curframe_locals['__return__']
+            self.stdout.write(repr(self.curframe_locals['__return__']))
         else:
-            print >>self.stdout, '*** Not yet returned!'
+            self.stdout.write('*** Not yet returned!')
     do_rv = do_retval
 
     def _getval(self, arg):
@@ -907,12 +906,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             if isinstance(t, str):
                 exc_type_name = t
             else: exc_type_name = t.__name__
-            print >>self.stdout, '***', exc_type_name + ':', repr(v)
+            self.stdout.write('***%s : %s' % (exc_type_name, repr(v)))
             raise
 
     def do_p(self, arg):
         try:
-            print >>self.stdout, repr(self._getval(arg))
+            self.stdout.write(repr(self._getval(arg)))
         except:
             pass
 
@@ -953,7 +952,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 line = linecache.getline(filename, lineno,
                                          self.curframe.f_globals)
                 if not line:
-                    print >>self.stdout, '[EOF]'
+                    self.stdout.write('[EOF]')
                     break
                 else:
                     s = repr(lineno).rjust(3)
@@ -962,7 +961,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                     else: s = s + ' '
                     if lineno == self.curframe.f_lineno:
                         s = s + '->'
-                    print >>self.stdout, s + '\t' + line,
+                    self.stdout.write(s + '\t' + line)
                     self.lineno = lineno
         except KeyboardInterrupt:
             pass
@@ -977,23 +976,23 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             if type(t) == type(''):
                 exc_type_name = t
             else: exc_type_name = t.__name__
-            print >>self.stdout, '***', exc_type_name + ':', repr(v)
+            self.stdout.write('***%s : %s ' % (exc_type_name, repr(v)))
             return
         code = None
         # Is it a function?
         try: code = value.func_code
         except: pass
         if code:
-            print >>self.stdout, 'Function', code.co_name
+            self.stdout.write('Function %s' % repr(code.co_name))
             return
         # Is it an instance method?
         try: code = value.im_func.func_code
         except: pass
         if code:
-            print >>self.stdout, 'Method', code.co_name
+            self.stdout.write('Method %s' % repr(code.co_name))
             return
         # None of the above...
-        print >>self.stdout, type(value)
+        self.stdout.write(repr(type(value)))
 
     def do_alias(self, arg):
         args = arg.split()
@@ -1001,10 +1000,10 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             keys = self.aliases.keys()
             keys.sort()
             for alias in keys:
-                print >>self.stdout, "%s = %s" % (alias, self.aliases[alias])
+                self.stdout.write("%s = %s" % (alias, self.aliases[alias]))
             return
         if args[0] in self.aliases and len(args) == 1:
-            print >>self.stdout, "%s = %s" % (args[0], self.aliases[args[0]])
+            self.stdout.write("%s = %s" % (args[0], self.aliases[args[0]]))
         else:
             self.aliases[args[0]] = ' '.join(args[1:])
 
@@ -1036,27 +1035,27 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
     def print_stack_entry(self, frame_lineno, prompt_prefix=line_prefix):
         frame, lineno = frame_lineno
         if frame is self.curframe:
-            print >>self.stdout, '>',
+            self.stdout.write('>')
         else:
-            print >>self.stdout, ' ',
-        print >>self.stdout, self.format_stack_entry(frame_lineno,
-                                                     prompt_prefix)
+            self.stdout.write(' ')
+        self.stdout.write(self.format_stack_entry(frame_lineno,
+                                                  prompt_prefix))
 
 
     # Help methods (derived from xpdb.doc)
     def help_src(self):
-        print >> self.stdout, """as peer in gdb,
+        print >>self.stdout, """as peer in gdb,
 used to specilized the directory of source code.
 @tmorted"""
 
     def help_traceEveryLine(self):
-        print >> self.stdout, """enable trace every line,
+        print >>self.stdout, """enable trace every line,
 if not so, bdb may not trace this scope"""
 
     help_tel = help_traceEveryLine
     
     def help_notTraceEveryLine(self):
-        print >> self.stdout, """disable trace every line,
+        print >>self.stdout, """disable trace every line,
 it is the default behavior of bdb"""
 
     help_ntel = help_notTraceEveryLine
@@ -1065,7 +1064,7 @@ it is the default behavior of bdb"""
         self.help_h()
 
     def help_h(self):
-        print >>self.stdout, """h(elp)
+        print >>self.stdout, """h(elp)a
 Without argument, print the list of available commands.
 With a command name as argument, print help about that command
 "help xpdb" pipes the full documentation file to the $PAGER
@@ -1075,7 +1074,7 @@ With a command name as argument, print help about that command
         self.help_w()
 
     def help_w(self):
-        print >>self.stdout, """w(here)
+        print self.stdout, """w(here)
 Print a stack trace, with the most recent frame at the bottom.
 An arrow indicates the "current frame", which determines the
 context of most commands.  'bt' is an alias for this command."""
@@ -1118,7 +1117,7 @@ the .py suffix may be omitted."""
         self.help_cl()
 
     def help_cl(self):
-        print >>self.stdout, "cl(ear) filename:lineno"
+        print >>self.stdout,  "cl(ear) filename:lineno"
         print >>self.stdout, """cl(ear) [bpnumber [bpnumber...]]
 With a space separated list of breakpoint numbers, clear
 those breakpoints.  Without argument, clear all breaks (but

@@ -24,10 +24,11 @@ class watchPointerList(object):
     @classmethod
     def showWatchPoint(cls):
         if noWatchPoint():
-            print >> sys.stdout, "do not set any WatchPoints now!"
+            sys.stdout.write("do not set any WatchPoints now!")
             return 
         for di in cls._watchPList:
-            print >> sys.stdout, "watchPoints: %s[%s] = %s" %(di[0], di[1], di[2])
+            sys.stdout.wirte("watchPoints: %s[%s] = %s"
+                             % (di[0], di[1], di[2]))
           
     @classmethod
     def noWatchPoint(cls):
@@ -38,7 +39,7 @@ class watchPointerList(object):
         for i in _ast.walk(astT):
             if hasattr(i, 'id'):
                 return i.id
-        print >> sys.stdout, "Error! can not get NameId"
+        sys.stdout.write("Error! can not get NameId")
         return "error"
 
     @classmethod
@@ -46,15 +47,15 @@ class watchPointerList(object):
         """ if the name of watchPonter A, B are same, will remove on randomly!
         """
         for di in cls._watchPList:
-            ni == di[-1]
-            if ni == arg:
+            if di[-1] == arg:
                 cls._watchPList.remove(di)
-                print >> sys.stdout, "watch Point %s removed succ!" % arg
+                sys.stdout.write("watch Point %s removed succ!" % arg)
                 if cls.noWatchPoint:
-                    print >> sys.stdout, "no watch points NOW !"
+                    sys.stdout.write("no watch points NOW !")
                     return
                 else:
-                    print >> sys.stdout, "failed to remove watch Point %s" % arg
+                    sys.stdout.write("failed to remove watch Point %s"
+                                     % arg)
                    
     @classmethod
     def findChangedPoint(cls, frame):
@@ -63,9 +64,11 @@ class watchPointerList(object):
             try:
                 f, value, eexp, id_f = di[0], di[2], di[3], di[4]
                     
-                newValue = eval(eexp, f) if id_f != id(frame) else eval(eexp, frame.f_locals, frame.f_globals)
+                newValue = eval(eexp, f) if id_f != id(frame) \
+                               else eval(eexp, frame.f_locals, frame.f_globals)
                 if newValue != value:
-                    print ' WatchPoint %s: Old Value = %s, New Value = %s' %(eexp, value, newValue)
+                    sys.stdout.write('WatchPoint %s: Old Value = %s,\
+                                    New Value = %s' % (eexp, value, newValue))
                     di[2] = newValue
                     retV = True
             except KeyError, TypeError:
@@ -80,7 +83,7 @@ for example: if namespace A, B both have var a, the watch pointer may attach to 
             _value = eval(arg, f.f_locals, f.f_globals)
             astT = _ast.parse(arg)
             _id = cls._getId(astT)
-            print _value, _id
+            sys.stdout.write("%s %s" % (repr(_value), repr(_id)))
             if _id == 'error':
                 raise NoThisVarError
               
@@ -88,14 +91,15 @@ for example: if namespace A, B both have var a, the watch pointer may attach to 
                 if f.f_locals.has_key(_id) or f.f_globals.has_key(_id):
                     wd = f.f_locals if f.f_locals.has_key(_id) else f.f_globals
                     cls._watchPList.append([_copy(wd) , _id, _value, arg, id(f)])
-                    print >> sys.stdout, "Succ to Add Watch Point"
+                    sys.stdout.write("Succ to Add Watch Point")
                     wd = None
                     return 
                 f = f.f_back
                       
                 raise NotFoundError            
         except Exception as e:
-            print >> sys.stdout, "Failed to Add Watch Point for", e
+            sys.stdout.write("Failed to Add Watch Point for %s"
+                             % repr(e))
 
 
 class NoThisVarError(Exception):

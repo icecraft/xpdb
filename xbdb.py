@@ -71,7 +71,7 @@ class Bdb:
             return self.trace_dispatch
         if event == 'c_return':
             return self.trace_dispatch
-        print 'xbdb.Bdb.dispatch: unknown debugging event:', repr(event)
+        sys.stdout.write('xbdb.Bdb.dispatch: unknown debugging event:', repr(event))
         return self.trace_dispatch
 
     def dispatch_line(self, frame):
@@ -260,10 +260,10 @@ class Bdb:
     def unset_traceClassMethod(self, arg):
         if int(arg) == -1:
             self.traceClassName = []
-            print >> sys.stdout, "remove all trace Classes successfully!"
+            sys.stdout.write("remove all trace Classes successfully!")
         else:
             self.infoTraceClassMethod()
-            print >>sys.stdout, "working ...."
+            sys.stdout.write("working ....")
             self.traceClassName = reduce(lambda r, (x,y): r+[y] if x != int(arg) else r,
                                          enumerate(self.traceClassName),
                                          [])
@@ -271,7 +271,7 @@ class Bdb:
             
     def infoTraceClassMethod(self):
         for index, name in enumerate(self.traceClassName):
-            print index, " : ", name
+            sys.stdout.write("%s : %s" % (repr(index), repr(name)))
 
     def break_traceClassMethod(self, frame):
         if 'self' not in frame.f_locals:
@@ -630,17 +630,17 @@ class Breakpoint:
             disp = disp + 'yes  '
         else:
             disp = disp + 'no   '
-        print >>out, '%-4dbreakpoint   %s at %s:%d' % (self.number, disp,
-                                                       self.file, self.line)
+        out.write('%-4dbreakpoint   %s at %s:%d' % (self.number, disp,
+                                                       self.file, self.line))
         if self.cond:
-            print >>out, '\tstop only if %s' % (self.cond,)
+            out.write('\tstop only if %s' % (self.cond,))
         if self.ignore:
-            print >>out, '\tignore next %d hits' % (self.ignore)
+            out.write('\tignore next %d hits' % (self.ignore))
         if (self.hits):
             if (self.hits > 1): ss = 's'
             else: ss = ''
-            print >>out, ('\tbreakpoint already hit %d time%s' %
-                          (self.hits, ss))
+            out.write('\tbreakpoint already hit %d time%s' %
+                      (self.hits, ss))
 
 # -----------end of Breakpoint class----------
 
