@@ -71,6 +71,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         self.aliases = {}
         self.mainpyfile = ''
         self._wait_for_mainpyfile = 0
+        self.infotips = self.stdout
         # Try to load readline if it exists
         try:
             import readline
@@ -336,9 +337,8 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         sub.call(['bash'])
 
     def help_shell(self):
-        print >>self.stdout, "invoke bash shell!"
+        print >>self.infotips, "invoke bash shell!"
 
-    
     def do_watch(self, arg):
         """the name of watch Point should not have space"""
         self.set_watchPoint(self.curframe, arg)
@@ -361,19 +361,19 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         return 1    
 
     def help_finish(self):
-        self.stdout.write(""" jump nearest while or for loop in a function,
-if does not have any loop, will stop at the caller of this function""") 
+        print >>self.infotips, """ jump nearest while or for loop in a function,
+if does not have any loop, will stop at the caller of this function""" 
     
     def help_infoWatchPoint(self):
-        self.stdout.write("""display current watch point""")
+        print >>self.infotips, """display current watch point"""
 
     help_infoWP = help_infoWatchPoint
     
     def help_watch(self):
-        self.stdout.write("""set watch point""") 
+        print >>self.stdout, """set watch point""" 
 
     def help_unsetWatch(self):
-        self.stdout.write("""unset watch point""")
+        print >>self.stdout, """unset watch point"""
     
     def do_src(self, arg):
         if os.path.isdir(arg):
@@ -402,7 +402,7 @@ if does not have any loop, will stop at the caller of this function""")
         self.stdout = logFile.dup(arg)
 
     def help_logon(self, arg):
-        print >> self.stdout, """enable log, just like gdb log on """
+        print >> self.infotips, """enable log, just like gdb log on """
 
     def do_logoff(self, arg):
         logFile.close()
@@ -414,9 +414,9 @@ if does not have any loop, will stop at the caller of this function""")
         self.set_traceEveryLine()        
 
     def help_traceClassMethod(self):
-        self.stdout.write("""trace class method, when the method of special class invoked.
+        print >>self.infotips, """trace class method, when the method of special class invoked.
 It will enter interaction mode. support *a* style class name.
-Amazing! it also works on module name instead of a speical class name """)        
+Amazing! it also works on module name instead of a speical class name """        
         
     def do_clearTraceClassMethod(self, arg):
         self.valid_call(arg,
@@ -424,17 +424,17 @@ Amazing! it also works on module name instead of a speical class name """)
                         self.unset_traceClassMethod)
 
     def help_clearTraceClassMethod(self):
-        self.stdout.write("""display trace class method
+        print >>self.infotips, """display trace class method
 arg explained:
 -1       : clear all
 n        : clear speical trace class method by index
-invalid n: will be ignore if n beyond the length of trace classes list""")
+invalid n: will be ignore if n beyond the length of trace classes list"""
     
     def do_infoTraceClassMethod(self, arg):
         self.infoTraceClassMethod()
 
     def help_infoTraceClassMethod(self):
-        self.stdout.write("""display current trace class method""")
+        print >>self.infotips ,"""display current trace class method"""
         
     def do_commands(self, arg):
         """Defines a list of commands associated to a breakpoint.
@@ -1033,22 +1033,23 @@ invalid n: will be ignore if n beyond the length of trace classes list""")
             self.stdout.write(' ')
         self.stdout.write(self.format_stack_entry(frame_lineno,
                                                   prompt_prefix))
+        self.stdout.write('\n')
 
 
     # Help methods (derived from xpdb.doc)
     def help_src(self):
-        print >>self.stdout, """as peer in gdb,
+        print >>self.infotips, """as peer in gdb,
 used to specilized the directory of source code.
 @tmorted"""
 
     def help_traceEveryLine(self):
-        print >>self.stdout, """enable trace every line,
+        print >>self.infotips, """enable trace every line,
 if not so, bdb may not trace this scope"""
 
     help_tel = help_traceEveryLine
     
     def help_notTraceEveryLine(self):
-        print >>self.stdout, """disable trace every line,
+        print >>self.infotips, """disable trace every line,
 it is the default behavior of bdb"""
 
     help_ntel = help_notTraceEveryLine
@@ -1057,7 +1058,7 @@ it is the default behavior of bdb"""
         self.help_h()
 
     def help_h(self):
-        print >>self.stdout, """h(elp)a
+        print >>self.infotips, """h(elp)a
 Without argument, print the list of available commands.
 With a command name as argument, print help about that command
 "help xpdb" pipes the full documentation file to the $PAGER
@@ -1067,7 +1068,7 @@ With a command name as argument, print help about that command
         self.help_w()
 
     def help_w(self):
-        print self.stdout, """w(here)
+        print self.infotips, """w(here)
 Print a stack trace, with the most recent frame at the bottom.
 An arrow indicates the "current frame", which determines the
 context of most commands.  'bt' is an alias for this command."""
@@ -1078,7 +1079,7 @@ context of most commands.  'bt' is an alias for this command."""
         self.help_d()
 
     def help_d(self):
-        print >>self.stdout, """d(own)
+        print >>self.infotips, """d(own)
 Move the current frame one level down in the stack trace
 (to a newer frame)."""
 
@@ -1086,7 +1087,7 @@ Move the current frame one level down in the stack trace
         self.help_u()
 
     def help_u(self):
-        print >>self.stdout, """u(p)
+        print >>self.infotips, """u(p)
 Move the current frame one level up in the stack trace
 (to an older frame)."""
 
@@ -1094,7 +1095,7 @@ Move the current frame one level up in the stack trace
         self.help_b()
 
     def help_b(self):
-        print >>self.stdout, """b(reak) ([file:]lineno | function) [, condition]
+        print >>self.infotips, """b(reak) ([file:]lineno | function) [, condition]
 With a line number argument, set a break there in the current
 file.  With a function name, set a break at first executable line
 of that function.  Without argument, list all breaks.  If a second
@@ -1110,8 +1111,8 @@ the .py suffix may be omitted."""
         self.help_cl()
 
     def help_cl(self):
-        print >>self.stdout,  "cl(ear) filename:lineno"
-        print >>self.stdout, """cl(ear) [bpnumber [bpnumber...]]
+        print >>self.infotips,  "cl(ear) filename:lineno"
+        print >>self.infotips, """cl(ear) [bpnumber [bpnumber...]]
 With a space separated list of breakpoint numbers, clear
 those breakpoints.  Without argument, clear all breaks (but
 first ask confirmation).  With a filename:lineno argument,
@@ -1123,21 +1124,21 @@ a linenumber was used instead of either filename:lineno or
 breakpoint numbers."""
 
     def help_tbreak(self):
-        print >>self.stdout, """tbreak  same arguments as break, but breakpoint
+        print >>self.infotips, """tbreak  same arguments as break, but breakpoint
 is removed when first hit."""
 
     def help_enable(self):
-        print >>self.stdout, """enable bpnumber [bpnumber ...]
+        print >>self.infotips, """enable bpnumber [bpnumber ...]
 Enables the breakpoints given as a space separated list of
 bp numbers."""
 
     def help_disable(self):
-        print >>self.stdout, """disable bpnumber [bpnumber ...]
+        print >>self.infotips, """disable bpnumber [bpnumber ...]
 Disables the breakpoints given as a space separated list of
 bp numbers."""
 
     def help_ignore(self):
-        print >>self.stdout, """ignore bpnumber count
+        print >>self.infotips, """ignore bpnumber count
 Sets the ignore count for the given breakpoint number.  A breakpoint
 becomes active when the ignore count is zero.  When non-zero, the
 count is decremented each time the breakpoint is reached and the
@@ -1145,7 +1146,7 @@ breakpoint is not disabled and any associated condition evaluates
 to true."""
 
     def help_condition(self):
-        print >>self.stdout, """condition bpnumber str_condition
+        print >>self.infotips, """condition bpnumber str_condition
 str_condition is a string specifying an expression which
 must evaluate to true before the breakpoint is honored.
 If str_condition is absent, any existing condition is removed;
@@ -1155,7 +1156,7 @@ i.e., the breakpoint is made unconditional."""
         self.help_s()
 
     def help_s(self):
-        print >>self.stdout, """s(tep)
+        print >>self.infotips, """s(tep)
 Execute the current line, stop at the first possible occasion
 (either in a function that is called or in the current function and does not 
 trigger any breakpoint or watchpoint)."""
@@ -1172,7 +1173,7 @@ one is reached or until the current frame returns"""
         self.help_n()
 
     def help_n(self):
-        print >>self.stdout, """n(ext) lineNum
+        print >>self.infotips, """n(ext) lineNum
 Continue execution until the reach currentLine plus lineNum ( if not trigger any
   breakpoint or watchpoint ) in the current function is reached or it returns."""
 
@@ -1180,7 +1181,7 @@ Continue execution until the reach currentLine plus lineNum ( if not trigger any
         self.help_r()
 
     def help_r(self):
-        print >>self.stdout, """r(eturn)
+        print >>self.infotips, """r(eturn)
 Continue execution until the current function returns."""
 
     def help_continue(self):
@@ -1190,18 +1191,18 @@ Continue execution until the current function returns."""
         self.help_c()
 
     def help_c(self):
-        print >>self.stdout, """c(ont(inue))
+        print >>self.infotips, """c(ont(inue))
 Continue execution, only stop when a breakpoint is encountered."""
 
     def help_jump(self):
         self.help_j()
 
     def help_j(self):
-        print >>self.stdout, """j(ump) lineno
+        print >>self.infotips, """j(ump) lineno
 Set the next line that will be executed."""
 
     def help_debug(self):
-        print >>self.stdout, """debug code
+        print >>self.infotips, """debug code
 Enter a recursive debugger that steps through the code argument
 (which is an arbitrary expression or statement to be executed
 in the current environment)."""
@@ -1210,7 +1211,7 @@ in the current environment)."""
         self.help_l()
 
     def help_l(self):
-        print >>self.stdout, """l(ist) [first [,last]]
+        print >>self.infotips, """l(ist) [first [,last]]
 List source code for the current file.
 Without arguments, list 11 lines around the current line
 or continue the previous listing.
@@ -1222,19 +1223,19 @@ if the second argument is less than the first, it is a count."""
         self.help_a()
 
     def help_a(self):
-        print >>self.stdout, """a(rgs)
+        print >>self.infotips, """a(rgs)
 Print the arguments of the current function."""
 
     def help_p(self):
-        print >>self.stdout, """p expression
+        print >>self.infotips, """p expression
 Print the value of the expression."""
 
     def help_pp(self):
-        print >>self.stdout, """pp expression
+        print >>self.infotips, """pp expression
 Pretty-print the value of the expression."""
 
     def help_exec(self):
-        print >>self.stdout, """(!) statement
+        print >>self.infotips, """(!) statement
 Execute the (one-line) statement in the context of
 the current stack frame.
 The exclamation point can be omitted unless the first word
@@ -1257,21 +1258,21 @@ History, breakpoints, actions and debugger options are preserved.
         self.help_q()
 
     def help_q(self):
-        print >>self.stdout, """q(uit) or exit - Quit from the debugger.
+        print >>self.infotips, """q(uit) or exit - Quit from the debugger.
 The program being executed is aborted."""
 
     help_exit = help_q
 
     def help_whatis(self):
-        print >>self.stdout, """whatis arg
+        print >>self.infotips, """whatis arg
 Prints the type of the argument."""
 
     def help_EOF(self):
-        print >>self.stdout, """EOF
+        print >>self.infotips, """EOF
 Handles the receipt of EOF as a command."""
 
     def help_alias(self):
-        print >>self.stdout, """alias [name [command [parameter parameter ...]]]
+        print >>self.infotips, """alias [name [command [parameter parameter ...]]]
 Creates an alias called 'name' the executes 'command'.  The command
 must *not* be enclosed in quotes.  Replaceable parameters are
 indicated by %1, %2, and so on, while %* is replaced by all the
@@ -1295,11 +1296,11 @@ alias ps pi self
 """
 
     def help_unalias(self):
-        print >>self.stdout, """unalias name
+        print >>self.infotips, """unalias name
 Deletes the specified alias."""
 
     def help_commands(self):
-        print >>self.stdout, """commands [bpnumber]
+        print >>self.infotips, """commands [bpnumber]
 (com) ...
 (com) end
 (Pdb)

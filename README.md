@@ -131,6 +131,10 @@ The program finished and will be restarted
     invoke bash 进入交互式环境
     
 
+### 6. 增加命令 logon main.log 控制台中的打印信息会 dump 到 main.log 中。logoff 会取消 dump 
+
+
+
 ### 待增加功能：
 *  1： 输出格式的美化
     
