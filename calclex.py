@@ -127,42 +127,45 @@ stmt; list 的表示'''
     l = None  # left
     r = None  # right
 
-
     
+class funcNode(Node):
+    name = None
+    args = None
+    body = None
     
 symtab = {}
 
 """
 # bison rules
 
-stmt: IF exp THEN list             #flowNode
+stmt: IF exp THEN list             #flowNode  FLOW
    | IF exp THEN list ELSE list    #flowNode 
    | WHEN exp THEN list            #flowNode 
-   | exp                           #Node
+   | exp                           #binoNode  NODE
 ;
 
 list: /* nothing */ 
-   | stmt ';' list                #binoNode
+   | stmt ';' list                #binoNode  LIST
    ;
 
-exp: exp CMP exp                  #binoNode
-   | exp '+' exp                  #binoNode
-   | exp '-' exp                  #binoNode
-   | exp '*' exp                  #binoNode
-   | exp '/' exp                  #binoNode
-   | '(' exp ')'                  #Node
+exp: exp CMP exp                  #binoNode  BIOP
+   | exp '+' exp                  #binoNode  BIOP
+   | exp '-' exp                  #binoNode  BIOP
+   | exp '*' exp                  #binoNode  BIOP
+   | exp '/' exp                  #binoNode  BIOP
+   | '(' exp ')'                  #Node      NODE  
    | '-' exp %prec UMINUS 
-   | NUMBER                       #Node
-   | NAME                         #Node
-   | NAME '=' exp                 #binoNode
-   | NAME '(' explist ')'         #binoNode
+   | NUMBER                       #Node     NUMBER
+   | NAME                         #Node     NAME 
+   | NAME '=' exp                 #binoNode NAME 
+   | NAME '(' explist ')'         #binoNode FUNC_CALL
 ;
 
 explist: exp
- | exp ',' explist               #binoNode
+ | exp ',' explist               #binoNode ARGS
 ;
-symlist: NAME                    #binoNode
- | NAME ',' symlist              #binoNode
+symlist: NAME                    #binoNode SYMBOLS
+ | NAME ',' symlist              #binoNode SYMBOLS
 ;
 
 calclist: /* nothing */
@@ -171,7 +174,7 @@ calclist: /* nothing */
      printf("= %4.4g\n> ", eval($2));
      treefree($2);
     }
-  | calclist DEFINE NAME '(' symlist ')' '=' list EOL  #binoNode
+  | calclist DEFINE NAME '(' symlist ')' '=' list EOL  #funcNode
 
   | calclist error EOL { yyerrok; printf("> "); }
  ;
