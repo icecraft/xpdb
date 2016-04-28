@@ -109,38 +109,60 @@ while True:
         break      # No more input
     print (tok)
 
+
+class Node(object):
+    value = None
+    ntype = None
+
     
+class flowNode(Node):
+    cond = None  # condition
+    tl = None  # then branch
+    el = None  # else branch
+
+    
+class binoNode(Node):
+    ''' =, -, *, /, <, >, != , == 
+stmt; list 的表示'''
+    l = None  # left
+    r = None  # right
+
+
+    
+    
+symtab = {}
+
 """
 # bison rules
 
-stmt: IF exp THEN list            
-   | IF exp THEN list ELSE list  
-   | WHEN exp THEN list           
-   | exp
+stmt: IF exp THEN list             #flowNode
+   | IF exp THEN list ELSE list    #flowNode 
+   | WHEN exp THEN list            #flowNode 
+   | exp                           #Node
 ;
 
-list: /* nothing */ { $$ = NULL; }
-   | stmt ';' list  {XX}                    }
+list: /* nothing */ 
+   | stmt ';' list                #binoNode
    ;
 
-exp: exp CMP exp          { $$ = newcmp($2, $1, $3); }
-   | exp '+' exp          { $$ = newast('+', $1,$3); }
-   | exp '-' exp          { $$ = newast('-', $1,$3);}
-   | exp '*' exp          { $$ = newast('*', $1,$3); }
-   | exp '/' exp          { $$ = newast('/', $1,$3); }
-   | '(' exp ')'          { $$ = $2; }
-   | '-' exp %prec UMINUS { $$ = newast('M', $2, NULL); }
-   | NUMBER               { $$ = newnum($1); }
-   | NAME                 { $$ = newref($1); }
-   | NAME '=' exp         { $$ = newasgn($1, $3); }
-   | NAME '(' explist ')' { $$ = newcall($1, $3); }
+exp: exp CMP exp                  #binoNode
+   | exp '+' exp                  #binoNode
+   | exp '-' exp                  #binoNode
+   | exp '*' exp                  #binoNode
+   | exp '/' exp                  #binoNode
+   | '(' exp ')'                  #Node
+   | '-' exp %prec UMINUS 
+   | NUMBER                       #Node
+   | NAME                         #Node
+   | NAME '=' exp                 #binoNode
+   | NAME '(' explist ')'         #binoNode
 ;
 
 explist: exp
- | exp ',' explist  { $$ = newast('L', $1, $3); }
+ | exp ',' explist               #binoNode
 ;
-symlist: NAME       { $$ = newsymlist($1, NULL); }
- | NAME ',' symlist { $$ = newsymlist($1, $3); }
+symlist: NAME                    #binoNode
+ | NAME ',' symlist              #binoNode
 ;
 
 calclist: /* nothing */
@@ -149,9 +171,7 @@ calclist: /* nothing */
      printf("= %4.4g\n> ", eval($2));
      treefree($2);
     }
-  | calclist LET NAME '(' symlist ')' '=' list EOL {
-                       dodef($3, $5, $8);
-                       printf("Defined %s\n> ", $3->name); }
+  | calclist DEFINE NAME '(' symlist ')' '=' list EOL  #binoNode
 
   | calclist error EOL { yyerrok; printf("> "); }
  ;
