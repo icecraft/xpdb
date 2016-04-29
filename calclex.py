@@ -18,14 +18,14 @@ tokens = [
     'NUMBER',
     'NAME',
     'EOL',
-    'LT',
-    'GT',
     'EQ',
     'NEQ',
+    'GT',
+    'LT',
     'CMP'
 ] + list(reserved.values())
 
-literals = ['+', '-', '/', '*', '(', ')', ',', '=', ';']
+literals = ['(', ')', ',', ';', '+', '-', '*', '/', '=']
 
 
 def t_GT(t):
@@ -135,6 +135,107 @@ class funcNode(Node):
     
 symtab = {}
 
+
+def p_stmt_if_noelse(p):
+    """ stmt: IF exp THEN list """
+    res = flowNode()
+    res.ntype = 'FLOW_IF'
+    res.cond = p[2]
+    res.tl = p[4]
+    p[0] = res
+
+    
+def p_stmt_if_else(p):
+    """  stmt: IF exp THEN list ELSE list """
+    res = flowNode()
+    res.ntype = 'FLOW_IF'
+    res.cond = p[2]
+    res.tl = p[4]
+    res.el = p[6]
+    p[0] = res
+
+
+def p_stmt_when(p):
+    """ stmt: WHEN exp THEN list  """
+    res = flowNode()
+    res.ntype = 'FLOW_WHEN'
+    res.cond = p[2]
+    res.tl = p[4]
+    p[0] = res
+    
+
+def p_stmt_exp(p):
+    """    stmt : exp   """
+    p[0] = p[1]
+
+    
+def p_list(p):
+    """ list : 
+             |stmt ';' list """
+    res = binoNode()
+    res.ntype = 'LIST'
+    if len(p) == 4:
+        res.l = p[1]
+        res.r = p[3]
+        p[0] = res        
+    else:
+        res.l, res.r = None, None
+        p[0] = res
+
+
+def p_biop_exp(p):
+    """ exp: exp '+' exp 
+           | exp '-' exp
+           | exp '*' exp 
+           | exp '/' exp  """
+  
+    res = binoNode()
+    res.l = p[1]
+    res.r = p[3]
+    res.ntype = 'BIOP'
+    res.value = p[2].value
+    p[0] = res
+
+    
+def evalnode(node):
+    pass
+
+
+def p_assign_exp(p):
+    """ exp: NAME '=' exp """
+    p[0] = evalnode(p[3])
+    symtab[p[1]] = p[0]
+
+
+def p_cmp_exp(p):
+    """ exp: exp CMP exp """                      
+    res = binoNode()
+    res.l = p[1]
+    res.r = p[3]
+    res.ntype = 'CMP'
+    res.value = p[2].value
+    p[0] = res
+
+def p_square_exp(p):
+    """ exp: ( exp ) """
+    p[0] = p[2]
+    
+
+def p_uminus_exp(p):
+    """ exp: '-' exp %prec UMINUS  """
+    res = binoNode()
+    res.value = - p[2].value
+    res.ntype = 'NUMBER'
+    p[0] = res
+
+def p_ref_exp(p):
+    """ exp: NAME """
+    res = binoNode()
+    res.value = lookup(p[1])
+    p[0] = res
+
+    
+    
 """
 # bison rules
 
@@ -148,7 +249,7 @@ list: /* nothing */
    | stmt ';' list                #binoNode  LIST
    ;
 
-exp: exp CMP exp                  #binoNode  BIOP
+Pexp: exp CMP exp                  #binoNode  BIOP
    | exp '+' exp                  #binoNode  BIOP
    | exp '-' exp                  #binoNode  BIOP
    | exp '*' exp                  #binoNode  BIOP
