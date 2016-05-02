@@ -71,7 +71,8 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         self.aliases = {}
         self.mainpyfile = ''
         self._wait_for_mainpyfile = 0
-        self.infotips = self.stdout
+        self.infotips = self.stdout  # add by xr
+        self.repeat_times = 0        # add by xr
         # Try to load readline if it exists
         try:
             import readline
@@ -225,7 +226,12 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         self.user_flagReset()
         self.setup(frame, traceback)
         self.print_stack_entry(self.stack[self.curindex])
-        self.cmdloop()
+        if self.repeat_times != 0:   # add by xr 
+            self.repeat_times -= 1
+            if self.repeat_func:
+                self.repeat_func(frame, self.infotips)
+        else:     
+            self.cmdloop()
         self.forget()
 
     def displayhook(self, obj):
@@ -329,7 +335,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
     # Command definitions, called by cmdloop()
     # The argument is the remaining string on the command line
     # Return true to exit from the command loop
-
+    
     do_h = cmd.Cmd.do_help
 
     def do_shell(self, arg):
@@ -339,6 +345,16 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
     def help_shell(self):
         print >>self.infotips, "invoke bash shell!"
 
+    def do_edit(slef, arg):
+        if arg is None:
+            sub.call(['emacs', '-nw'])
+        else:
+            args = arg.split()
+            sub.call(['emacs', '-nw', '%s' % args[0]])
+
+    def help_edit(self):
+        print >> self.infotips, """edit or edit xxx.filename """
+        
     def do_watch(self, arg):
         """the name of watch Point should not have space"""
         self.set_watchPoint(self.curframe, arg)
@@ -434,8 +450,25 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         self.infoTraceClassMethod()
 
     def help_infoTraceClassMethod(self):
-        print >>self.infotips ,"""display current trace class method"""
+        print >>self.infotips, """display current trace class method"""
         
+    def do_repeat(self, arg):
+        self.repeat_func = None
+        args = arg.split()
+        args.append('')
+        self.repeat_times = int(args[0])
+        try:
+            mname, fname = args[1].split('.')
+            exec('from %s import *' % mname) in locals()
+            self.repeat_func = locals().get(fname, None)
+        except Exception as e:
+            self.stdout.write(repr(e))
+        self.set_continue()
+        return 1
+        
+    def help_repeat(self):
+        print >> self.infotips, """ repeat command for times """
+            
     def do_commands(self, arg):
         """Defines a list of commands associated to a breakpoint.
 
