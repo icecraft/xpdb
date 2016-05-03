@@ -73,6 +73,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         self._wait_for_mainpyfile = 0
         self.infotips = self.stdout  # add by xr
         self.repeat_times = 0        # add by xr
+        self.cmdqueue.append('help')   # add by xr
         # Try to load readline if it exists
         try:
             import readline
@@ -468,7 +469,21 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         
     def help_repeat(self):
         print >> self.infotips, """ repeat command for times """
-            
+
+    def do_source(self, arg):
+        if not arg:
+            self.help_source()
+        if not os.path.exists(arg):
+            print >> self.infotips, """ invalid filename"""
+        else:
+            with open(arg, 'r') as f:
+                for line in f.readlines():
+                    if line != '\n':
+                        self.cmdqueue.append(line)
+    
+    def help_source(self):
+        print >> self.infotips, """ load command for pdb just like gdb """
+    
     def do_commands(self, arg):
         """Defines a list of commands associated to a breakpoint.
 
