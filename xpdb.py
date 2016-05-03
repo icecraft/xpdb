@@ -372,7 +372,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
     
     def do_finish(self, arg):
         """ just as gdb finish do!"""
-        if 'module' not  in str(self.curframe.f_code):
+        if 'module' not in str(self.curframe.f_code):
             self.set_finish(self.curframe)
         return 1    
 
@@ -417,7 +417,7 @@ if does not have any loop, will stop at the caller of this function"""
         arg = "xpdb.log" if not arg else arg
         self.stdout = logFile.dup(arg)
 
-    def help_logon(self, arg):
+    def help_logon(self):
         print >> self.infotips, """enable log, just like gdb log on """
 
     def do_logoff(self, arg):
@@ -938,12 +938,14 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
     def do_p(self, arg):
         try:
             self.stdout.write(repr(self._getval(arg)))
+            self.stdout.write('\n')
         except:
             pass
 
     def do_pp(self, arg):
         try:
             pprint.pprint(self._getval(arg), self.stdout)
+            self.stdout.write('\n')
         except:
             pass
 

@@ -134,6 +134,8 @@ The program finished and will be restarted
 ### 6. 增加命令 logon main.log 控制台中的打印信息会 dump 到 main.log 中。logoff 会取消 dump 
 
 
+### 7. 增加自定义命令：执行 repeat_times 次在断点处会自动触发 repeat_func 函数
+
 
 ### 待增加功能：
 *  1： 输出格式的美化
@@ -153,7 +155,11 @@ The program finished and will be restarted
 
 *   4： pydb jump, return命令支持
 
-*   5：rwatch 变量
+*   5：rwatch 变量 (不可实现)
+
+*   6: dump 某些命令和参数。且支持后续 load 进去自动执行
+
+
 
 
 

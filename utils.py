@@ -225,6 +225,7 @@ class logFile(object):
     def write(cls, value):
         if cls.log_fd:
             cls.log_fd.write(value)
+            cls.log_fd.flush()
         cls.save_stdout.write(value)
 
         
