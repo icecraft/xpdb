@@ -137,6 +137,15 @@ The program finished and will be restarted
 ### 7. 增加自定义命令：执行 repeat_times 次在断点处会自动触发 repeat_func 函数
 
 
+### 8. 增加命令 source：source filename 会逐一执行文件中存在的 xpdb 命令
+
+
+### 9. 增加命令 edit xx：会启动 emacs 进行编辑 xx 文件
+
+
+### 10. 增加历史命令功能：能查询执行过的历史命令和 dump 历史命令到文件
+
+
 ### 待增加功能：
 *  1： 输出格式的美化
     
@@ -157,7 +166,7 @@ The program finished and will be restarted
 
 *   5：rwatch 变量 (不可实现)
 
-*   6: dump 某些命令和参数。且支持后续 load 进去自动执行
+
 
 
 
