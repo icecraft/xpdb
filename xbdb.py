@@ -1,5 +1,5 @@
 """Debugger basics"""
-
+# -*- coding: utf-8 -*-
 import fnmatch
 import sys
 import os

@@ -1,21 +1,52 @@
-
+# -*- coding: utf-8 -*-
 from copy import copy as _copy
 import ast as _ast
 import sys
 import os.path
-
+import logging
+import inspect
 
 __all__ = ["watchPointerList", "noWatchPoint", "getFinishLine",
            "colorStr", "logFile", "logWrapClass", "logWrapfunc"]
 
+# init logger 
+logger = logging.getLogger('xpdb.utils.log')
+logger.setLevel(logging.DEBUG)
 
-def logWrapfunc(func):
-    import logging
+fh = logging.FileHandler('xpdb.utils.log')
+fh.setLevel(logging.DEBUG)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+logger.addHandler(fh)
+logger.addHandler(ch)
+
+
+def log_init():
+    inited = [False]
+
+    def _log_init():
+        pass
     
+    def func():
+        if inited[0]:
+            return
+        else:
+            inited[0] = True
+            _log_init()
+    return func
+
+
+def logWrapfunc(func, logger=logger):
     def wrap(*args, **kwargs):
-        logging.info('enter %s', repr(func))
+        logger.info('enter %s', repr(func))
         result = func(*args, **kwargs)
-        logging.info('exit %s', repr(func))
+        logger.info('exit %s', repr(func))
         return result
     return wrap
 
@@ -24,7 +55,11 @@ class logWrapClass(object):
     def __init__(self, obj):
         self.attr = "a custom function attribute"
         self.obj = obj
+        self.logger = logger 
         self._instance = None
+
+    def set_loger(self, logger):
+        self.logger = logger
         
     def __call__(self, *args, **kwargs):
         self._instance = self.obj(*args, **kwargs)
@@ -32,8 +67,12 @@ class logWrapClass(object):
         
     def __getattr__(self, attr):
         attr_1 = getattr(self._instance, attr)
-        return logWrapfunc(attr_1)
-
+        if inspect.ismethod(attr_1):
+            # 如果是方法 (包括 类方法)
+            return logWrapfunc(attr_1, self.logger)
+        else:
+            return attr_1
+        
     
 """    
 @logWrapClass

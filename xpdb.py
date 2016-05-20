@@ -1,5 +1,5 @@
 #! /usr/bin/python2.7
-
+# -*- coding: utf-8 -*-
 """A Python debugger."""
 
 # (See xpdb.doc for documentation.)
