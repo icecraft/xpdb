@@ -42,6 +42,10 @@ def log_init():
     return func
 
 
+def nowrap(func):
+    return func
+
+
 def logWrapfunc(func, logger=logger):
     def wrap(*args, **kwargs):
         logger.info('enter %s', repr(func))
