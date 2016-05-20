@@ -6,8 +6,46 @@ import os.path
 
 
 __all__ = ["watchPointerList", "noWatchPoint", "getFinishLine",
-           "colorStr", "logFile"]
+           "colorStr", "logFile", "logWrapClass", "logWrapfunc"]
 
+
+def logWrapfunc(func):
+    import logging
+    
+    def wrap(*args, **kwargs):
+        logging.info('enter %s', repr(func))
+        result = func(*args, **kwargs)
+        logging.info('exit %s', repr(func))
+        return result
+    return wrap
+
+
+class logWrapClass(object):
+    def __init__(self, obj):
+        self.attr = "a custom function attribute"
+        self.obj = obj
+        self._instance = None
+        
+    def __call__(self, *args, **kwargs):
+        self._instance = self.obj(*args, **kwargs)
+        return self
+        
+    def __getattr__(self, attr):
+        attr_1 = getattr(self._instance, attr)
+        return logWrapfunc(attr_1)
+
+    
+"""    
+@logWrapClass
+class B(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def ad1(self, x):
+        return  x+1
+"""
+            
 
 def noWatchPoint():
     return watchPointerList.noWatchPoint
@@ -105,6 +143,7 @@ for example: if namespace A, B both have var a, the watch pointer may attach to 
                              % repr(e))
             sys.stdout.write('\n')
 
+            
 class NoThisVarError(Exception):
     def __str__(self):
         return "NoThisVarError: can not find this variable"
