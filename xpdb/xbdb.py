@@ -4,17 +4,18 @@ import fnmatch
 import sys
 import os
 import types
-from utils import watchPointerList, noWatchPoint,\
+import linecache
+from .utils import watchPointerList, noWatchPoint,\
     getFinishLine, colorStr
 
-__all__ = ["BdbQuit", "Bdb", "Breakpoint"]
+__all__ = ["XBdbQuit", "XBdb", "Breakpoint"]
 
 
-class BdbQuit(Exception):
+class XBdbQuit(Exception):
     """Exception to give up completely"""
 
 
-class Bdb:
+class XBdb:
 
     """Generic Python debugger base class.
 
@@ -47,7 +48,6 @@ class Bdb:
         return canonic
 
     def reset(self):
-        import linecache
         linecache.checkcache()
         self.botframe = None
         self._set_stopinfo(None, None)
@@ -80,7 +80,7 @@ class Bdb:
             if not self.stop_here(frame) or \
                  self.remainStepTimes+self.remainNextTimes == 0:
                 self.user_line(frame)
-            if self.quitting: raise BdbQuit
+            if self.quitting: raise XBdbQuit
         self.update_remainStepNext(frame)            
         return self.trace_dispatch
 
@@ -99,7 +99,7 @@ class Bdb:
             else:
                 return  # None
         self.user_call(frame, arg)
-        if self.quitting: raise BdbQuit
+        if self.quitting: raise XBdbQuit
         return self.trace_dispatch
 
     def dispatch_return(self, frame, arg):
@@ -109,13 +109,13 @@ class Bdb:
                 self.user_return(frame, arg)
             finally:
                 self.frame_returning = None
-            if self.quitting: raise BdbQuit
+            if self.quitting: raise XBdbQuit
         return self.trace_dispatch
 
     def dispatch_exception(self, frame, arg):
         if self.stop_here(frame):
             self.user_exception(frame, arg)
-            if self.quitting: raise BdbQuit
+            if self.quitting: raise XBdbQuit
         return self.trace_dispatch
 
     # Normally derived classes don't override the following
@@ -284,8 +284,8 @@ class Bdb:
 """
                 if pattern in str(frame.f_locals['self'].__class__):
                     return True
-            except:
-                pass
+            except Exception as e:
+                print e
         return False    
     
     def _set_stopinfo(self, stopframe, returnframe, stoplineno=0):
@@ -513,7 +513,7 @@ class Bdb:
             cmd = cmd+'\n'
         try:
             exec cmd in globals, locals
-        except BdbQuit:
+        except XBdbQuit:
             pass
         finally:
             self.quitting = 1
@@ -531,7 +531,7 @@ class Bdb:
             expr = expr+'\n'
         try:
             return eval(expr, globals, locals)
-        except BdbQuit:
+        except XBdbQuit:
             pass
         finally:
             self.quitting = 1
@@ -549,7 +549,7 @@ class Bdb:
         res = None
         try:
             res = func(*args, **kwds)
-        except BdbQuit:
+        except XBdbQuit:
             pass
         finally:
             self.quitting = 1
@@ -558,7 +558,7 @@ class Bdb:
 
 
 def set_trace():
-    Bdb().set_trace()
+    XBdb().set_trace()
 
 
 class Breakpoint:
@@ -726,7 +726,7 @@ def effective(file, line, frame):
 
 # -------------------- testing --------------------
 
-class Tdb(Bdb):
+class Tdb(XBdb):
     def user_call(self, frame, args):
         name = frame.f_code.co_name
         if not name: name = '???'

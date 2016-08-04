@@ -7,19 +7,25 @@
 import sys
 import linecache
 import cmd
-import xbdb
+from .xbdb import XBdb, Breakpoint
 from repr import Repr
 import os
 import re
 import pprint
-import traceback
 import subprocess as sub
 from utils import logFile
+
+
+try:
+    import readline
+except ImportError:
+    pass
 
 
 class Restart(Exception):
     """Causes a debugger to be restarted for the debugged python program."""
     pass
+
 
 # Create a custom safe Repr instance and increase its maxstring.
 # The default of 30 truncates error messages too easily.
@@ -27,7 +33,7 @@ _repr = Repr()
 _repr.maxstring = 200
 _saferepr = _repr.repr
 
-__all__ = ["run", "pm", "Pdb", "runeval", "runctx", "runcall", "set_trace",
+__all__ = ["run", "pm", "XPdb", "runeval", "runctx", "runcall", "set_trace",
            "post_mortem", "help"]
 
 
@@ -60,10 +66,10 @@ def find_function(funcname, filename):
 line_prefix = '\n-> '   # Probably a better default
 
 
-class Pdb(xbdb.Bdb, cmd.Cmd):
+class XPdb(XBdb, cmd.Cmd):
 
     def __init__(self, completekey='tab', stdin=None, stdout=None, skip=None):
-        xbdb.Bdb.__init__(self, skip=skip)
+        XBdb.__init__(self, skip=skip)
         cmd.Cmd.__init__(self, completekey, stdin, stdout)
         if stdout:
             self.use_rawinput = 0
@@ -74,11 +80,6 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         self.infotips = self.stdout  # add by xr
         self.repeat_times = 0        # add by xr
         self.cmdqueue.append('help')   # add by xr
-        # Try to load readline if it exists
-        try:
-            import readline
-        except ImportError:
-            pass
 
         # Read $HOME/.xpdbrc and ./.xpdbrc
         self.rcLines = []
@@ -112,7 +113,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
                                    # defining a list
     
     def reset(self):
-        xbdb.Bdb.reset(self)
+        XBdb.reset(self)
         self.forget()
 
     def forget(self):
@@ -182,7 +183,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
         False otherwise."""
         # self.currentbp is set in xbdb in Bdb.break_here if a breakpoint was hit
         if getattr(self, "currentbp", False) and \
-               self.currentbp in self.commands:
+           self.currentbp in self.commands:
             currentbp = self.currentbp
             self.currentbp = 0
             lastcmd_back = self.lastcmd
@@ -278,7 +279,7 @@ class Pdb(xbdb.Bdb, cmd.Cmd):
             ii = 1
             for tmpArg in args[1:]:
                 line = line.replace("%" + str(ii),
-                                      tmpArg)
+                                    tmpArg)
                 ii = ii + 1
             line = line.replace("%*", ' '.join(args[1:]))
             args = line.split()
@@ -490,7 +491,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         Those commands will be executed whenever the breakpoint causes
         the program to stop execution."""
         if not arg:
-            bnum = len(xbdb.Breakpoint.bpbynumber)-1
+            bnum = len(Breakpoint.bpbynumber)-1
         else:
             try:
                 bnum = int(arg)
@@ -516,7 +517,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if not arg:
             if self.breaks:  # There's at least one
                 self.stdout.write("Num Type         Disp Enb   Where")
-                for bp in xbdb.Breakpoint.bpbynumber:
+                for bp in Breakpoint.bpbynumber:
                     if bp:
                         bp.bpprint(self.stdout)
             return
@@ -676,11 +677,11 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
-            if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
+            if not (0 <= i < len(Breakpoint.bpbynumber)):
                 self.stdout.write('No breakpoint numbered %s', repr(i))
                 continue
 
-            bp = xbdb.Breakpoint.bpbynumber[i]
+            bp = Breakpoint.bpbynumber[i]
             if bp:
                 bp.enable()
 
@@ -693,11 +694,11 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
-            if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
+            if not (0 <= i < len(Breakpoint.bpbynumber)):
                 self.stdout.write('No breakpoint numbered %r' % i)
                 continue
 
-            bp = xbdb.Breakpoint.bpbynumber[i]
+            bp = Breakpoint.bpbynumber[i]
             if bp:
                 bp.disable()
 
@@ -715,7 +716,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         except:
             cond = None
         try:
-            bp = xbdb.Breakpoint.bpbynumber[bpnum]
+            bp = Breakpoint.bpbynumber[bpnum]
         except IndexError:
             self.stdout.write('Breakpoint index %r is not valid' % args[0])
             return
@@ -739,7 +740,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         except:
             count = 0
         try:
-            bp = xbdb.Breakpoint.bpbynumber[bpnum]
+            bp = Breakpoint.bpbynumber[bpnum]
         except IndexError:
             self.stdout.write('Breakpoint index %r is not valid' % args[0])
             return
@@ -791,7 +792,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 self.stdout.write('Breakpoint index %r is not a number' % i)
                 continue
 
-            if not (0 <= i < len(xbdb.Breakpoint.bpbynumber)):
+            if not (0 <= i < len(Breakpoint.bpbynumber)):
                 self.stdout.write('No breakpoint numbered %r' % i)
                 continue
             err = self.clear_bpbynumber(i)
@@ -896,7 +897,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         sys.settrace(None)
         globals = self.curframe.f_globals
         locals = self.curframe_locals
-        p = Pdb(self.completekey, self.stdin, self.stdout)
+        p = XPdb(self.completekey, self.stdin, self.stdout)
         p.prompt = "(%s) " % self.prompt.strip()
         self.stdout.write("ENTERING RECURSIVE DEBUGGER")
         sys.call_tracing(p.run, (arg, globals, locals))
@@ -1439,11 +1440,11 @@ see no sign that the breakpoint was reached.
 
 
 def run(statement, globals=None, locals=None):
-    Pdb().run(statement, globals, locals)
+    XPdb().run(statement, globals, locals)
 
     
 def runeval(expression, globals=None, locals=None):
-    return Pdb().runeval(expression, globals, locals)
+    return XPdb().runeval(expression, globals, locals)
 
 
 def runctx(statement, globals, locals):
@@ -1452,11 +1453,11 @@ def runctx(statement, globals, locals):
 
     
 def runcall(*args, **kwds):
-    return Pdb().runcall(*args, **kwds)
+    return XPdb().runcall(*args, **kwds)
 
 
 def set_trace():
-    Pdb().set_trace(sys._getframe().f_back)
+    XPdb().set_trace(sys._getframe().f_back)
 
 # Post-Mortem interface
 
@@ -1471,7 +1472,7 @@ def post_mortem(t=None):
             raise ValueError("A valid traceback must be passed if no "
                                                "exception is being handled")
 
-    p = Pdb()
+    p = XPdb()
     p.reset()
     p.interaction(None, t)
 
@@ -1502,50 +1503,3 @@ def help():
         print 'along the Python search path'
 
         
-def main():
-    if not sys.argv[1:] or sys.argv[1] in ("--help", "-h"):
-        print "usage: xpdb.py scriptfile [arg] ..."
-        sys.exit(2)
-
-    mainpyfile = sys.argv[1]     # Get script filename
-    if not os.path.exists(mainpyfile):
-        print 'Error:', mainpyfile, 'does not exist'
-        sys.exit(1)
-
-    del sys.argv[0]         # Hide "xpdb.py" from argument list
-
-    # Replace xpdb's dir with script's dir in front of module search path.
-    sys.path[0] = os.path.dirname(mainpyfile)
-
-    # Note on saving/restoring sys.argv: it's a good idea when sys.argv was
-    # modified by the script being debugged. It's a bad idea when it was
-    # changed by the user from the command line. There is a "restart" command
-    # which allows explicit specification of command line arguments.
-    xpdb = Pdb()
-    while True:
-        try:
-            xpdb._runscript(mainpyfile)
-            if xpdb._user_requested_quit:
-                break
-            print "The program finished and will be restarted"
-        except Restart:
-            print "Restarting", mainpyfile, "with arguments:"
-            print "\t" + " ".join(sys.argv[1:])
-        except SystemExit:
-            # In most cases SystemExit does not warrant a post-mortem session.
-            print "The program exited via sys.exit(). Exit status: ",
-            print sys.exc_info()[1]
-        except:
-            traceback.print_exc()
-            print "Uncaught exception. Entering post mortem debugging"
-            print "Running 'cont' or 'step' will restart the program"
-            t = sys.exc_info()[2]
-            xpdb.interaction(None, t)
-            print "Post mortem debugger finished. The " + mainpyfile + \
-                  " will be restarted"
-
-
-# When invoked as main program, invoke the debugger on a script
-if __name__ == '__main__':
-    import xpdb
-    xpdb.main()
