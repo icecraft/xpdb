@@ -284,8 +284,8 @@ class XBdb:
 """
                 if pattern in str(frame.f_locals['self'].__class__):
                     return True
-            except Exception as e:
-                print e
+            except:
+                pass
         return False    
     
     def _set_stopinfo(self, stopframe, returnframe, stoplineno=0):
