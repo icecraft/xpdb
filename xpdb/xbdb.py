@@ -272,6 +272,8 @@ class XBdb:
     def infoTraceClassMethod(self):
         for index, name in enumerate(self.traceClassName):
             sys.stdout.write("%s : %s" % (repr(index), repr(name)))
+        sys.stdout.write("\n")
+        sys.stdout.flush()
 
     def break_traceClassMethod(self, frame):
         if 'self' not in frame.f_locals:

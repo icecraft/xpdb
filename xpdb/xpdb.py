@@ -263,11 +263,16 @@ class XPdb(XBdb, cmd.Cmd):
                 sys.stdin = save_stdin
                 sys.displayhook = save_displayhook
         except:
-            t, v = sys.exc_info()[:2]
-            if type(t) == type(''):
-                exc_type_name = t
-            else: exc_type_name = t.__name__
-            self.stdout.write('*** %s : %s' % (repr(exc_type_name), repr(v)))
+            try:
+                sub.call(line.split())
+            except:
+                t, v = sys.exc_info()[:2]
+                if type(t) == type(''):
+                    exc_type_name = t
+                else: exc_type_name = t.__name__
+                self.stdout.write('*** %s : %s' % (repr(exc_type_name), repr(v)))
+                self.stdout.write('\n')
+                self.stdout.flush()
 
     def precmd(self, line):
         """Handle alias expansion and ';;' separator."""
