@@ -143,6 +143,7 @@ class XPdb(XBdb, cmd.Cmd):
                 line = line[:-1]
                 if len(line) > 0 and line[0] != '#':
                     self.stdout.write(line)
+                    self.stdout.write('\n')
                     self.onecmd(line)
 
     # Override Bdb methods
@@ -205,6 +206,7 @@ class XPdb(XBdb, cmd.Cmd):
             return
         frame.f_locals['__return__'] = return_value
         self.stdout.write('--Return--')
+        self.stdout.write('\n')        
         self.interaction(frame, None)
 
     def user_exception(self, frame, exc_info):
@@ -220,6 +222,7 @@ class XPdb(XBdb, cmd.Cmd):
         else: exc_type_name = exc_type.__name__
         self.stdout.write("%s : %s" % (repr(exc_type_name),
                                        _saferepr(exc_value)))
+        self.stdout.write('\n')        
         self.interaction(frame, exc_traceback)
 
     # General interaction function
@@ -243,6 +246,7 @@ class XPdb(XBdb, cmd.Cmd):
         # reproduce the behavior of the standard displayhook, not printing None
         if obj is not None:
             self.stdout.write(repr(obj))
+            self.stdout.write('\n')            
 
     def default(self, line):
         if line[:1] == '!': line = line[1:]
@@ -272,7 +276,6 @@ class XPdb(XBdb, cmd.Cmd):
                 else: exc_type_name = t.__name__
                 self.stdout.write('*** %s : %s' % (repr(exc_type_name), repr(v)))
                 self.stdout.write('\n')
-                self.stdout.flush()
 
     def precmd(self, line):
         """Handle alias expansion and ';;' separator."""
@@ -470,6 +473,8 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             self.repeat_func = locals().get(fname, None)
         except Exception as e:
             self.stdout.write(repr(e))
+            self.stdout.write('\n')
+            
         self.set_continue()
         return 1
         
@@ -503,6 +508,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             except:
                 self.stdout.write("Usage : commands [bnum]\n        ...\
                                      \n        end")
+                self.stdout.write('\n')                
                 return
         self.commands_bnum = bnum
         self.commands[bnum] = []
@@ -522,6 +528,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if not arg:
             if self.breaks:  # There's at least one
                 self.stdout.write("Num Type         Disp Enb   Where")
+                self.stdout.write('\n')                
                 for bp in Breakpoint.bpbynumber:
                     if bp:
                         bp.bpprint(self.stdout)
@@ -544,7 +551,9 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             f = self.lookupmodule(filename)
             if not f:
                 self.stdout.write('*** %s' % repr(filename))
+                self.stdout.write('\n')                
                 self.stdout.write('not found from sys.path')
+                self.stdout.write('\n')                
                 return
             else:
                 filename = f
@@ -553,6 +562,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 lineno = int(arg)
             except ValueError, msg:
                 self.stdout.write('*** Bad lineno:%s' % arg)
+                self.stdout.write('\n')
                 return
         else:
             # no colon; can be lineno or function
@@ -579,9 +589,13 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                     (ok, filename, ln) = self.lineinfo(arg)
                     if not ok:
                         self.stdout.write('*** The specified object')
+                        self.stdout.write('\n')                        
                         self.stdout.write(repr(arg))
+                        self.stdout.write('\n')                        
                         self.stdout.write('is not a function')
+                        self.stdout.write('\n')                        
                         self.stdout.write('or was not found along sys.path.')
+                        self.stdout.write('\n')                        
                         return
                     funcname = ok  # ok contains a function name
                     lineno = int(ln)
@@ -592,12 +606,15 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if line:
             # now set the break point
             err = self.set_break(filename, line, temporary, cond, funcname)
-            if err: self.stdout.write('***%s' % repr(err))
+            if err:
+                self.stdout.write('***%s' % repr(err))
+                self.stdout.write('\n')                
             else:
                 bp = self.get_breaks(filename, line)[-1]
                 self.stdout.write("Breakpoint %d at %s:%d" % (bp.number,
                                                                  bp.file,
                                                                  bp.line))
+                self.stdout.write('\n')
 
     # To be overridden in derived debuggers
     def defaultFile(self):
@@ -657,12 +674,14 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         line = linecache.getline(filename, lineno, globs)
         if not line:
             self.stdout.write('End of file')
+            self.stdout.write('\n')
             return 0
         line = line.strip()
         # Don't allow setting breakpoint at a blank line
         if (not line or (line[0] == '#') or
              (line[:3] == '"""') or line[:3] == "'''"):
             self.stdout.write('*** Blank or comment')
+            self.stdout.write('\n')            
             return 0
         return lineno
 
@@ -680,10 +699,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 i = int(i)
             except ValueError:
                 self.stdout.write('Breakpoint index %r is not a number' % i)
+                self.stdout.write('\n')                
                 continue
 
             if not (0 <= i < len(Breakpoint.bpbynumber)):
                 self.stdout.write('No breakpoint numbered %s', repr(i))
+                self.stdout.write('\n')                
                 continue
 
             bp = Breakpoint.bpbynumber[i]
@@ -697,10 +718,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 i = int(i)
             except ValueError:
                 self.stdout.write('Breakpoint index %r is not a number' % i)
+                self.stdout.write('\n')                
                 continue
 
             if not (0 <= i < len(Breakpoint.bpbynumber)):
                 self.stdout.write('No breakpoint numbered %r' % i)
+                self.stdout.write('\n')                
                 continue
 
             bp = Breakpoint.bpbynumber[i]
@@ -715,6 +738,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         except ValueError:
             # something went wrong
             self.stdout.write('Breakpoint index %r is not a number' % args[0])
+            self.stdout.write('\n')            
             return
         try:
             cond = args[1]
@@ -724,12 +748,13 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             bp = Breakpoint.bpbynumber[bpnum]
         except IndexError:
             self.stdout.write('Breakpoint index %r is not valid' % args[0])
+            self.stdout.write('\n')            
             return
         if bp:
             bp.cond = cond
             if not cond:
-                self.stdout.write('Breakpoint %r', bpnum)
-                self.stdout.write('is now unconditional.')
+                self.stdout.write('Breakpoint %r\n', bpnum)
+                self.stdout.write('is now unconditional.\n')
 
     def do_ignore(self, arg):
         """arg is bp number followed by ignore count."""
@@ -738,7 +763,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             bpnum = int(args[0].strip())
         except ValueError:
             # something went wrong
-            self.stdout.write('Breakpoint index %r is not a number' % args[0])
+            self.stdout.write('Breakpoint index %r is not a number\n' % args[0])
             return
         try:
             count = int(args[1].strip())
@@ -747,7 +772,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         try:
             bp = Breakpoint.bpbynumber[bpnum]
         except IndexError:
-            self.stdout.write('Breakpoint index %r is not valid' % args[0])
+            self.stdout.write('Breakpoint index %r is not valid\n' % args[0])
             return
         if bp:
             bp.ignore = count
@@ -757,10 +782,10 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                     reply = reply + '%d crossings' % count
                 else:
                     reply = reply + '1 crossing'
-                self.stdout.write('%s of breakpoint %d.' % (reply, bpnum))
+                self.stdout.write('%s of breakpoint %d.\n' % (reply, bpnum))
             else:
-                self.stdout.write('Will stop next time breakpoint')
-                self.stdout.write('%r is reached.' % bpnum)
+                self.stdout.write('Will stop next time breakpoint\n')
+                self.stdout.write('%r is reached.\n' % bpnum)
 
     def do_clear(self, arg):
         """Three possibilities, tried in this order:
@@ -787,24 +812,24 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 err = "Invalid line number (%s)" % arg
             else:
                 err = self.clear_break(filename, lineno)
-            if err: self.stdout.write( '*** %s' % repr(err))
+            if err: self.stdout.write( '*** %s\n' % repr(err))
             return
         numberlist = arg.split()
         for i in numberlist:
             try:
                 i = int(i)
             except ValueError:
-                self.stdout.write('Breakpoint index %r is not a number' % i)
+                self.stdout.write('Breakpoint index %r is not a number\n' % i)
                 continue
 
             if not (0 <= i < len(Breakpoint.bpbynumber)):
-                self.stdout.write('No breakpoint numbered %r' % i)
+                self.stdout.write('No breakpoint numbered %r\n' % i)
                 continue
             err = self.clear_bpbynumber(i)
             if err:
-                self.stdout.write('***%s' % repr(err))
+                self.stdout.write('***%s\n' % repr(err))
             else:
-                self.stdout.write('Deleted breakpoint %r' % i)
+                self.stdout.write('Deleted breakpoint %r\n' % i)
     do_cl = do_clear # 'c' is already an abbreviation for 'continue'
 
     def do_where(self, arg):
@@ -814,7 +839,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_up(self, arg):
         if self.curindex == 0:
-            self.stdout.write('*** Oldest frame')
+            self.stdout.write('*** Oldest frame\n')
         else:
             self.curindex = self.curindex - 1
             self.curframe = self.stack[self.curindex][0]
@@ -825,7 +850,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_down(self, arg):
         if self.curindex + 1 == len(self.stack):
-            self.stdout.write('*** Newest frame')
+            self.stdout.write('*** Newest frame\n')
         else:
             self.curindex = self.curindex + 1
             self.curframe = self.stack[self.curindex][0]
@@ -881,12 +906,12 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
 
     def do_jump(self, arg):
         if self.curindex + 1 != len(self.stack):
-            self.stdout.write("*** You can only jump within the bottom frame")
+            self.stdout.write("*** You can only jump within the bottom frame\n")
             return
         try:
             arg = int(arg)
         except ValueError:
-            self.stdout.write("*** The 'jump' command requires a line number.")
+            self.stdout.write("*** The 'jump' command requires a line number.\n")
         else:
             try:
                 # Do the jump, fix up our copy of the stack, and display the
@@ -895,7 +920,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                 self.stack[self.curindex] = self.stack[self.curindex][0], arg
                 self.print_stack_entry(self.stack[self.curindex])
             except ValueError, e:
-                self.stdout.write('*** Jump failed: %s' % repr(e))
+                self.stdout.write('*** Jump failed: %s\n' % repr(e))
     do_j = do_jump
 
     def do_debug(self, arg):
@@ -904,9 +929,9 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         locals = self.curframe_locals
         p = XPdb(self.completekey, self.stdin, self.stdout)
         p.prompt = "(%s) " % self.prompt.strip()
-        self.stdout.write("ENTERING RECURSIVE DEBUGGER")
+        self.stdout.write("ENTERING RECURSIVE DEBUGGER\n")
         sys.call_tracing(p.run, (arg, globals, locals))
-        self.stdout.write("LEAVING RECURSIVE DEBUGGER")
+        self.stdout.write("LEAVING RECURSIVE DEBUGGER\n")
         sys.settrace(self.trace_dispatch)
         self.lastcmd = p.lastcmd
 
@@ -919,7 +944,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
     do_exit = do_quit
 
     def do_EOF(self, arg):
-        self.stdout.write('')
+        self.stdout.write('\n')
         self._user_requested_quit = 1
         self.set_quit()
         return 1
@@ -932,16 +957,19 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         if co.co_flags & 8: n = n+1
         for i in range(n):
             name = co.co_varnames[i]
-            self.stdout.write('= %s' % name)
-            if name in dict: self.stdout.write(repr(dict[name]))
-            else: self.stdout.write("*** undefined ***")
+            self.stdout.write('= %s\n' % name)
+            if name in dict:
+                self.stdout.write(repr(dict[name]))
+                self.stdout.write('\n')                
+            else: self.stdout.write("*** undefined ***\n")
     do_a = do_args
 
     def do_retval(self, arg):
         if '__return__' in self.curframe_locals:
             self.stdout.write(repr(self.curframe_locals['__return__']))
+            self.stdout.write('\n')            
         else:
-            self.stdout.write('*** Not yet returned!')
+            self.stdout.write('*** Not yet returned!\n')
     do_rv = do_retval
 
     def _getval(self, arg):
@@ -953,7 +981,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             if isinstance(t, str):
                 exc_type_name = t
             else: exc_type_name = t.__name__
-            self.stdout.write('***%s : %s' % (exc_type_name, repr(v)))
+            self.stdout.write('***%s : %s\n' % (exc_type_name, repr(v)))
             raise
 
     def do_p(self, arg):
@@ -1002,6 +1030,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
                                          self.curframe.f_globals)
                 if not line:
                     self.stdout.write('[EOF]')
+                    self.stdout.write('\n')
                     break
                 else:
                     s = repr(lineno).rjust(3)
@@ -1025,23 +1054,24 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             if type(t) == type(''):
                 exc_type_name = t
             else: exc_type_name = t.__name__
-            self.stdout.write('***%s : %s ' % (exc_type_name, repr(v)))
+            self.stdout.write('***%s : %s \n' % (exc_type_name, repr(v)))
             return
         code = None
         # Is it a function?
         try: code = value.func_code
         except: pass
         if code:
-            self.stdout.write('Function %s' % repr(code.co_name))
+            self.stdout.write('Function %s\n' % repr(code.co_name))
             return
         # Is it an instance method?
         try: code = value.im_func.func_code
         except: pass
         if code:
-            self.stdout.write('Method %s' % repr(code.co_name))
+            self.stdout.write('Method %s\n' % repr(code.co_name))
             return
         # None of the above...
         self.stdout.write(repr(type(value)))
+        self.stdout.write('\n')        
 
     def do_alias(self, arg):
         args = arg.split()
@@ -1050,9 +1080,11 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
             keys.sort()
             for alias in keys:
                 self.stdout.write("%s = %s" % (alias, self.aliases[alias]))
+                self.stdout.write('\n')                
             return
         if args[0] in self.aliases and len(args) == 1:
             self.stdout.write("%s = %s" % (args[0], self.aliases[args[0]]))
+            self.stdout.write('\n')            
         else:
             self.aliases[args[0]] = ' '.join(args[1:])
 
@@ -1085,6 +1117,7 @@ invalid n: will be ignore if n beyond the length of trace classes list"""
         frame, lineno = frame_lineno
         if frame is self.curframe:
             self.stdout.write('>')
+            self.stdout.write('\n')            
         else:
             self.stdout.write(' ')
         self.stdout.write(self.format_stack_entry(frame_lineno,
